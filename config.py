@@ -1,7 +1,7 @@
 # 股票预测系统配置文件
 
 # Tushare API配置
-TUSHARE_TOKEN = '69928e0046d63ab5cb45b1e54e787af2773cdfd7e18159a72cc562b0'  # 用户提供的token_key
+TUSHARE_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # 用户提供的token_key
 TUSHARE_TIMEOUT = 10  # API请求超时时间(秒)
 TUSHARE_RETRY_TIMES = 3  # API请求失败重试次数
 
