@@ -10,6 +10,7 @@
 4. **批量股票预测**：同时预测多只股票的未来五天价格并支持结果导出
 5. **数据可视化**：展示预测结果与实际价格的对比图表
 <img width="1910" height="923" alt="4160a910-3a96-46bd-ab28-a8345ffad42c" src="https://github.com/user-attachments/assets/728c1466-d0a3-4c22-83d5-f1f3466e34fc" />
+<img width="1030" height="655" alt="image" src="https://github.com/user-attachments/assets/b8bf39cf-c99d-4319-9e69-192ef91ddef0" />
 
 
 ## 环境准备
