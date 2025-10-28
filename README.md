@@ -9,7 +9,8 @@
 3. **单只股票预测**：使用训练好的模型预测单只股票的未来五天价格
 4. **批量股票预测**：同时预测多只股票的未来五天价格并支持结果导出
 5. **数据可视化**：展示预测结果与实际价格的对比图表
-![Uploading image.png…]()
+<img width="1910" height="923" alt="4160a910-3a96-46bd-ab28-a8345ffad42c" src="https://github.com/user-attachments/assets/728c1466-d0a3-4c22-83d5-f1f3466e34fc" />
+
 
 ## 环境准备
 
