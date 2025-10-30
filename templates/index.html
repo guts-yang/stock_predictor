@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票预测系统 - 可视化操作界面</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 引入Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
+    
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#F5222D',
+                        dark: '#1F2937',
+                        light: '#F9FAFB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+    
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        /* 加载动画 */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #165DFF;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        /* 卡片悬浮效果 */
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa fa-line-chart text-primary text-2xl"></i>
+                    <h1 class="text-xl font-bold text-primary">股票预测系统</h1>
+                </div>
+                
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#dashboard" class="font-medium hover:text-primary transition-colors duration-300">数据看板</a>
+                    <a href="#data" class="font-medium hover:text-primary transition-colors duration-300">获取数据</a>
+                    <a href="#train" class="font-medium hover:text-primary transition-colors duration-300">训练模型</a>
+                    <a href="#predict" class="font-medium hover:text-primary transition-colors duration-300">股票预测</a>
+                    <a href="#batch" class="font-medium hover:text-primary transition-colors duration-300">批量预测</a>
+                    <a href="#models" class="font-medium hover:text-primary transition-colors duration-300">模型管理</a>
+                </nav>
+                
+                <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <div class="container mx-auto px-4 py-2">
+                <a href="#dashboard" class="block py-2 hover:text-primary transition-colors duration-300">数据看板</a>
+                <a href="#data" class="block py-2 hover:text-primary transition-colors duration-300">获取数据</a>
+                <a href="#train" class="block py-2 hover:text-primary transition-colors duration-300">训练模型</a>
+                <a href="#predict" class="block py-2 hover:text-primary transition-colors duration-300">股票预测</a>
+                <a href="#batch" class="block py-2 hover:text-primary transition-colors duration-300">批量预测</a>
+                <a href="#models" class="block py-2 hover:text-primary transition-colors duration-300">模型管理</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+        <!-- 系统概览 -->
+        <section id="dashboard" class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                            <h2 class="text-2xl font-bold text-dark mb-2 md:mb-0">系统概览</h2>
+                            <div class="flex gap-3">
+                                <button id="refresh-status" class="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300">
+                                    <i class="fa fa-refresh mr-2"></i>刷新状态
+                                </button>
+                                <button id="clear-cache" class="bg-warning hover:bg-warning/90 text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300">
+                                    <i class="fa fa-trash mr-2"></i>清理缓存
+                                </button>
+                            </div>
+                        </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- GPU状态 -->
+                    <div id="gpu-status" class="bg-blue-50 rounded-lg p-5 border border-blue-100 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">GPU可用状态</p>
+                                <h3 class="text-xl font-semibold mt-1">未检测</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-primary">
+                                <i class="fa fa-microchip text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full bg-gray-200 rounded-full">
+                            <div class="h-1 bg-primary rounded-full w-0"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tushare连接 -->
+                    <div id="tushare-status" class="bg-green-50 rounded-lg p-5 border border-green-100 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Tushare连接</p>
+                                <h3 class="text-xl font-semibold mt-1">未检测</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                <i class="fa fa-database text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full bg-gray-200 rounded-full">
+                            <div class="h-1 bg-green-500 rounded-full w-0"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 模型数量 -->
+                    <div id="model-count" class="bg-purple-50 rounded-lg p-5 border border-purple-100 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">已训练模型</p>
+                                <h3 class="text-xl font-semibold mt-1">0</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                                <i class="fa fa-cube text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full bg-gray-200 rounded-full">
+                            <div class="h-1 bg-purple-500 rounded-full w-0"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据文件 -->
+                    <div id="data-count" class="bg-amber-50 rounded-lg p-5 border border-amber-100 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">数据文件</p>
+                                <h3 class="text-xl font-semibold mt-1">0</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+                                <i class="fa fa-file-text-o text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full bg-gray-200 rounded-full">
+                            <div class="h-1 bg-amber-500 rounded-full w-0"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 系统信息卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Python版本 -->
+                    <div class="bg-gray-50 rounded-lg p-5 border border-gray-200 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Python版本</p>
+                                <h3 class="text-xl font-semibold mt-1" id="python-version">未检测</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
+                                <i class="fa fa-code text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 目录大小 -->
+                    <div class="bg-gray-50 rounded-lg p-5 border border-gray-200 card-hover transition-all-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500">存储空间使用</p>
+                                <h3 class="text-xl font-semibold mt-1" id="storage-usage">未检测</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
+                                <i class="fa fa-hdd-o text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full bg-gray-200 rounded-full">
+                            <div id="storage-bar" class="h-1 bg-primary rounded-full w-0"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>已用: <span id="storage-used">0 MB</span></span>
+                            <span>总计: <span id="storage-total">0 MB</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：表单和控制面板 -->
+            <div class="lg:col-span-1">
+                <!-- 获取股票数据 -->
+                <section id="data" class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-dark mb-4">获取股票数据</h2>
+                    <form id="fetch-data-form" class="space-y-4">
+                        <div>
+                            <label for="stock-code" class="block text-sm font-medium text-gray-700 mb-1">股票代码</label>
+                            <input type="text" id="stock-code" name="stock-code" placeholder="例如: 000001.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="start-date" class="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+                                <input type="text" id="start-date" name="start-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="end-date" class="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+                                <input type="text" id="end-date" name="end-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <button type="submit" id="fetch-data-btn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
+                            <i class="fa fa-download mr-2"></i>获取数据
+                        </button>
+                    </form>
+                    <div id="fetch-data-status" class="mt-4 hidden"></div>
+                </section>
+
+                <!-- 训练模型 -->
+                <section id="train" class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-dark mb-4">训练预测模型</h2>
+                    <form id="train-model-form" class="space-y-4">
+                        <div>
+                            <label for="train-stock-code" class="block text-sm font-medium text-gray-700 mb-1">股票代码</label>
+                            <input type="text" id="train-stock-code" name="train-stock-code" placeholder="例如: 000001.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="train-start-date" class="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+                                <input type="text" id="train-start-date" name="train-start-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="train-end-date" class="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+                                <input type="text" id="train-end-date" name="train-end-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="hidden-size" class="block text-sm font-medium text-gray-700 mb-1">隐藏层大小</label>
+                                <input type="number" id="hidden-size" name="hidden-size" value="64" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="num-layers" class="block text-sm font-medium text-gray-700 mb-1">LSTM层数</label>
+                                <input type="number" id="num-layers" name="num-layers" value="2" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="sequence-length" class="block text-sm font-medium text-gray-700 mb-1">序列长度</label>
+                                <input type="number" id="sequence-length" name="sequence-length" value="5" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="batch-size" class="block text-sm font-medium text-gray-700 mb-1">批次大小</label>
+                                <input type="number" id="batch-size" name="batch-size" value="32" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="learning-rate" class="block text-sm font-medium text-gray-700 mb-1">学习率</label>
+                                <input type="number" id="learning-rate" name="learning-rate" value="0.001" step="0.0001" min="0.00001" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="epochs" class="block text-sm font-medium text-gray-700 mb-1">训练轮数</label>
+                                <input type="number" id="epochs" name="epochs" value="100" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="patience" class="block text-sm font-medium text-gray-700 mb-1">早停耐心值</label>
+                            <input type="number" id="patience" name="patience" value="10" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <button type="submit" id="train-model-btn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
+                            <i class="fa fa-cogs mr-2"></i>开始训练
+                        </button>
+                    </form>
+                    <div id="train-status" class="mt-4 hidden"></div>
+                </section>
+            </div>
+
+            <!-- 右侧：图表和结果 -->
+            <div class="lg:col-span-2">
+                <!-- 股票预测 -->
+                <section id="predict" class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-dark mb-4">股票价格预测</h2>
+                    <form id="predict-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="predict-stock-code" class="block text-sm font-medium text-gray-700 mb-1">股票代码</label>
+                            <input type="text" id="predict-stock-code" name="predict-stock-code" placeholder="例如: 000001.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" id="predict-btn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
+                                <i class="fa fa-bar-chart mr-2"></i>预测价格
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="prediction-result" class="hidden mb-6">
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <p class="text-sm text-gray-500">股票代码</p>
+                                    <p id="predicted-stock-code" class="text-xl font-bold mt-1"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">最新收盘价</p>
+                                    <p id="latest-close-price" class="text-xl font-bold mt-1"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">未来五天预测收盘价</p>
+                                    <p id="predicted-price" class="text-xl font-bold mt-1"></p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p id="prediction-change" class="text-lg font-medium"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 预测结果图表 -->
+                    <div id="prediction-chart-container" class="hidden mb-4">
+                        <h3 class="text-lg font-semibold mb-3">未来五天预测结果对比</h3>
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <img id="prediction-chart" src="" alt="预测结果图表" class="w-full h-auto">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 批量预测 -->
+                <section id="batch" class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-dark mb-4">批量股票预测</h2>
+                    <div class="mb-4">
+                        <label for="batch-stock-codes" class="block text-sm font-medium text-gray-700 mb-1">股票代码列表 (逗号分隔)</label>
+                        <textarea id="batch-stock-codes" rows="3" placeholder="例如: 000001.SZ,000002.SZ,000003.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300"></textarea>
+                    </div>
+                    <button id="batch-predict-btn" class="bg-primary hover:bg-primary/90 text-white py-3 px-6 rounded-lg flex items-center justify-center transition-all duration-300 mb-4">
+                        <i class="fa fa-table mr-2"></i>批量预测
+                    </button>
+                    
+                    <div id="batch-result" class="hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">股票代码</th>
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">最新收盘价</th>
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">未来五天预测收盘价</th>
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">未来五天预测涨跌幅(%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batch-result-body">
+                                    <!-- 动态填充结果 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4">
+                            <a id="download-result" href="#" class="bg-success hover:bg-success/90 text-white py-2 px-4 rounded-lg inline-flex items-center transition-all duration-300">
+                                <i class="fa fa-download mr-2"></i>下载结果
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 股票数据图表 -->
+                <section id="stock-chart-section" class="bg-white rounded-xl shadow-md p-6 mb-6 hidden">
+                    <h2 class="text-xl font-bold text-dark mb-4">股票数据走势</h2>
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <canvas id="stock-chart" height="300"></canvas>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- 模型管理 -->
+        <section id="models" class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-dark mb-4">模型管理</h2>
+            <div id="models-table-container" class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">股票代码</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">模型类型</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">隐藏层大小</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">LSTM层数</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">序列长度</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">文件大小</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">修改时间</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="models-table-body">
+                        <tr>
+                            <td colspan="7" class="py-4 px-4 text-center text-gray-500">暂无已训练模型</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-600">© 2023 股票预测系统. 保留所有权利.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-300"><i class="fa fa-github text-xl"></i></a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-300"><i class="fa fa-twitter text-xl"></i></a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-300"><i class="fa fa-linkedin text-xl"></i></a>
+                </div>
+            </div>
+            <div class="mt-4 text-center text-gray-500 text-sm">
+                <p>免责声明：本系统预测结果仅供参考，不构成投资建议。投资有风险，入市需谨慎。</p>
+                <p id="system-version-info" class="mt-1"></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 获取系统状态
+        function refreshSystemStatus() {
+            axios.get('/api/system_status')
+                .then(response => {
+                    if (response.data.success) {
+                        const status = response.data;
+                        
+                        // 更新GPU状态
+                        const gpuStatus = document.getElementById('gpu-status');
+                        const gpuText = gpuStatus.querySelector('h3');
+                        const gpuBar = gpuStatus.querySelector('.bg-primary');
+                        
+                        if (status.has_gpu) {
+                            gpuText.textContent = '已启用';
+                            gpuBar.style.width = '100%';
+                        } else {
+                            gpuText.textContent = '未启用';
+                            gpuBar.style.width = '0%';
+                        }
+                        
+                        // 更新Tushare连接
+                        const tushareStatus = document.getElementById('tushare-status');
+                        const tushareText = tushareStatus.querySelector('h3');
+                        const tushareBar = tushareStatus.querySelector('.bg-green-500');
+                        
+                        if (status.tushare_connected) {
+                            tushareText.textContent = '已连接';
+                            tushareBar.style.width = '100%';
+                        } else {
+                            tushareText.textContent = '未连接';
+                            tushareBar.style.width = '0%';
+                        }
+                        
+                        // 更新模型数量
+                        const modelCount = document.getElementById('model-count');
+                        const modelText = modelCount.querySelector('h3');
+                        const modelBar = modelCount.querySelector('.bg-purple-500');
+                        
+                        modelText.textContent = status.model_count;
+                        modelBar.style.width = status.model_count > 0 ? '100%' : '0%';
+                        
+                        // 更新数据文件数量
+                        const dataCount = document.getElementById('data-count');
+                        const dataText = dataCount.querySelector('h3');
+                        const dataBar = dataCount.querySelector('.bg-amber-500');
+                        
+                        dataText.textContent = status.data_count;
+                        dataBar.style.width = status.data_count > 0 ? '100%' : '0%';
+                        
+                        // 更新Python版本
+                        document.getElementById('python-version').textContent = status.python_version || '未检测';
+                        
+                        // 更新存储空间信息
+                        if (status.storage_info) {
+                            document.getElementById('storage-usage').textContent = status.storage_info.usage_percentage + '%';
+                            document.getElementById('storage-used').textContent = status.storage_info.used;
+                            document.getElementById('storage-total').textContent = status.storage_info.total;
+                            document.getElementById('storage-bar').style.width = status.storage_info.usage_percentage + '%';
+                        }
+                        
+                        // 更新系统版本信息
+                        if (status.system_version) {
+                            document.getElementById('system-version-info').textContent = status.system_version;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取系统状态失败:', error);
+                });
+        }
+        
+        // 获取模型列表
+        function loadModels() {
+            axios.get('/api/get_models')
+                .then(response => {
+                    if (response.data.success) {
+                        const models = response.data.models;
+                        const tableBody = document.getElementById('models-table-body');
+                        
+                        if (models.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">暂无已训练模型</td></tr>';
+                        } else {
+                            let html = '';
+                            models.forEach(model => {
+                                html += `
+                                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                        <td class="py-3 px-4 border-b">${model.stock_code}</td>
+                                        <td class="py-3 px-4 border-b">${model.model_type}</td>
+                                        <td class="py-3 px-4 border-b">${model.hidden_size}</td>
+                                        <td class="py-3 px-4 border-b">${model.num_layers}</td>
+                                        <td class="py-3 px-4 border-b">${model.sequence_length}</td>
+                                        <td class="py-3 px-4 border-b">${model.file_size || 'N/A'}</td>
+                                        <td class="py-3 px-4 border-b">${model.last_modified}</td>
+                                        <td class="py-3 px-4 border-b">
+                                            <div class="flex space-x-2">
+                                                <button class="use-model-btn bg-primary hover:bg-primary/90 text-white py-1 px-3 rounded transition-colors duration-200 text-sm" data-stock-code="${model.stock_code}">
+                                                    使用模型
+                                                </button>
+                                                <button class="delete-model-btn bg-danger hover:bg-danger/90 text-white py-1 px-3 rounded transition-colors duration-200 text-sm" data-model-path="${model.model_path || ''}">
+                                                    删除
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                            tableBody.innerHTML = html;
+                            
+                            // 添加使用模型按钮事件
+                            document.querySelectorAll('.use-model-btn').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    const stockCode = this.getAttribute('data-stock-code');
+                                    document.getElementById('predict-stock-code').value = stockCode;
+                                    // 平滑滚动到预测区域
+                                    document.getElementById('predict').scrollIntoView({ behavior: 'smooth' });
+                                });
+                            });
+                            
+                            // 添加删除模型按钮事件
+                            document.querySelectorAll('.delete-model-btn').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    const modelPath = this.getAttribute('data-model-path');
+                                    if (modelPath && confirm('确定要删除这个模型吗？此操作不可恢复。')) {
+                                        // 从路径中提取文件名
+                                        const filename = modelPath.split('/').pop().split('\\').pop();
+                                        axios.post('/api/delete_model', {
+                                            filename: filename
+                                        })
+                                        .then(response => {
+                                            if (response.data.success) {
+                                                showNotification(response.data.message, 'success');
+                                                // 重新加载模型列表
+                                                loadModels();
+                                                // 刷新系统状态
+                                                refreshSystemStatus();
+                                            } else {
+                                                showNotification(response.data.message, 'error');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            showNotification('删除模型失败: ' + error.message, 'error');
+                                            console.error('删除模型失败:', error);
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取模型列表失败:', error);
+                });
+        }
+        
+        // 初始化股票图表
+        let stockChart = null;
+        function initStockChart(labels, data) {
+            const ctx = document.getElementById('stock-chart').getContext('2d');
+            
+            if (stockChart) {
+                stockChart.destroy();
+            }
+            
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '收盘价',
+                            data: data.close_prices,
+                            borderColor: '#165DFF',
+                            backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 2,
+                            pointHoverRadius: 4
+                        },
+                        {
+                            label: '5日均线',
+                            data: data.ma5,
+                            borderColor: '#52C41A',
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '10日均线',
+                            data: data.ma10,
+                            borderColor: '#FAAD14',
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 6
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 10,
+                            cornerRadius: 4,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            display: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示通知
+            showNotification('系统初始化完成，欢迎使用股票预测系统！', 'success');
+            
+            // 刷新系统状态
+            refreshSystemStatus();
+            
+            // 加载模型列表
+            loadModels();
+            
+            // 设置默认日期
+            const today = new Date();
+            const defaultEndDate = today.toISOString().split('T')[0].replace(/-/g, '');
+            
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            const defaultStartDate = oneYearAgo.toISOString().split('T')[0].replace(/-/g, '');
+            
+            document.getElementById('start-date').value = defaultStartDate;
+            document.getElementById('end-date').value = defaultEndDate;
+            document.getElementById('train-start-date').value = defaultStartDate;
+            document.getElementById('train-end-date').value = defaultEndDate;
+            
+            // 缓存清理按钮点击事件
+              document.getElementById('clear-cache').addEventListener('click', function() {
+                  if (confirm('确定要清理系统缓存吗？这将删除所有临时文件和缓存数据。')) {
+                      showLoading('clear-cache');
+                       
+                      axios.post('/api/clear_cache')
+                          .then(response => {
+                              hideLoading('clear-cache');
+                               
+                              if (response.data.success) {
+                                  // 显示基本通知
+                                  showNotification(response.data.message, 'success');
+                                   
+                                  // 如果有详细统计信息，显示更详细的通知
+                                  if (response.data.stats) {
+                                      const stats = response.data.stats;
+                                      const detailedMessage = `\n\n详细清理统计:\n\n` +
+                                          `总文件数: ${stats.total_files_removed}\n` +
+                                          `总释放空间: ${stats.total_space_freed}\n\n` +
+                                          `图表缓存:\n` +
+                                          `- 文件数: ${stats.plots_files_removed}\n` +
+                                          `- 释放空间: ${stats.plots_space_freed}\n\n` +
+                                          `结果缓存:\n` +
+                                          `- 文件数: ${stats.results_files_removed}\n` +
+                                          `- 释放空间: ${stats.results_space_freed}\n\n` +
+                                          `清理耗时: ${stats.time_taken}`;
+                                       
+                                      // 使用alert显示详细信息
+                                      setTimeout(() => {
+                                          alert('缓存清理完成!\n' + detailedMessage);
+                                      }, 500);
+                                  }
+                                   
+                                  // 刷新系统状态
+                                  refreshSystemStatus();
+                              } else {
+                                  showNotification(response.data.message, 'error');
+                              }
+                          })
+                          .catch(error => {
+                              hideLoading('clear-cache');
+                              showNotification('清理缓存失败: ' + error.message, 'error');
+                              console.error('清理缓存失败:', error);
+                          });
+                  }
+              });
+            
+            // 获取数据表单提交
+            document.getElementById('fetch-data-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const stockCode = document.getElementById('stock-code').value;
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                if (!stockCode) {
+                    showStatus('fetch-data-status', '请输入股票代码', 'error');
+                    return;
+                }
+                
+                showLoading('fetch-data-btn');
+                showStatus('fetch-data-status', '正在获取数据...', 'loading');
+                
+                axios.post('/api/fetch_data', {
+                    stock_code: stockCode,
+                    start_date: startDate,
+                    end_date: endDate
+                })
+                .then(response => {
+                    hideLoading('fetch-data-btn');
+                    
+                    if (response.data.success) {
+                        showStatus('fetch-data-status', response.data.message, 'success');
+                        
+                        // 显示股票图表
+                        const stockChartSection = document.getElementById('stock-chart-section');
+                        stockChartSection.classList.remove('hidden');
+                        
+                        // 初始化股票图表
+                        initStockChart(response.data.data.dates, response.data.data);
+                        
+                        // 刷新系统状态
+                        refreshSystemStatus();
+                        
+                        // 平滑滚动到图表区域
+                        stockChartSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showStatus('fetch-data-status', response.data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    hideLoading('fetch-data-btn');
+                    showStatus('fetch-data-status', '获取数据失败: ' + error.message, 'error');
+                    console.error('获取数据失败:', error);
+                });
+            });
+            
+            // 训练模型表单提交
+            document.getElementById('train-model-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const stockCode = document.getElementById('train-stock-code').value;
+                const startDate = document.getElementById('train-start-date').value;
+                const endDate = document.getElementById('train-end-date').value;
+                const hiddenSize = parseInt(document.getElementById('hidden-size').value);
+                const numLayers = parseInt(document.getElementById('num-layers').value);
+                const sequenceLength = parseInt(document.getElementById('sequence-length').value);
+                const batchSize = parseInt(document.getElementById('batch-size').value);
+                const learningRate = parseFloat(document.getElementById('learning-rate').value);
+                const epochs = parseInt(document.getElementById('epochs').value);
+                const patience = parseInt(document.getElementById('patience').value);
+                
+                if (!stockCode) {
+                    showStatus('train-status', '请输入股票代码', 'error');
+                    return;
+                }
+                
+                showLoading('train-model-btn');
+                showStatus('train-status', '正在训练模型... 这可能需要一些时间', 'loading');
+                
+                axios.post('/api/train_model', {
+                    stock_code: stockCode,
+                    start_date: startDate,
+                    end_date: endDate,
+                    model_type: 'baseline',
+                    hidden_size: hiddenSize,
+                    num_layers: numLayers,
+                    sequence_length: sequenceLength,
+                    batch_size: batchSize,
+                    learning_rate: learningRate,
+                    epochs: epochs,
+                    patience: patience
+                })
+                .then(response => {
+                    hideLoading('train-model-btn');
+                    
+                    if (response.data.success) {
+                        showStatus('train-status', response.data.message, 'success');
+                        
+                        // 刷新模型列表
+                        loadModels();
+                        
+                        // 刷新系统状态
+                        refreshSystemStatus();
+                        
+                        // 提示用户可以进行预测
+                        setTimeout(() => {
+                            document.getElementById('predict-stock-code').value = stockCode;
+                            alert('模型训练成功！您可以使用此模型进行预测了。');
+                            // 平滑滚动到预测区域
+                            document.getElementById('predict').scrollIntoView({ behavior: 'smooth' });
+                        }, 1000);
+                    } else {
+                        showStatus('train-status', response.data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    hideLoading('train-model-btn');
+                    showStatus('train-status', '训练模型失败: ' + error.message, 'error');
+                    console.error('训练模型失败:', error);
+                });
+            });
+            
+            // 预测表单提交
+            document.getElementById('predict-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const stockCode = document.getElementById('predict-stock-code').value;
+                
+                if (!stockCode) {
+                    alert('请输入股票代码');
+                    return;
+                }
+                
+                showLoading('predict-btn');
+                
+                axios.post('/api/predict_single', {
+                    stock_code: stockCode,
+                    model_type: 'baseline'
+                })
+                .then(response => {
+                    hideLoading('predict-btn');
+                    
+                    if (response.data.success) {
+                        const data = response.data;
+                        
+                        // 显示预测结果
+                        document.getElementById('prediction-result').classList.remove('hidden');
+                        document.getElementById('predicted-stock-code').textContent = data.stock_code;
+                        document.getElementById('latest-close-price').textContent = data.latest_close.toFixed(2);
+                        document.getElementById('predicted-price').textContent = data.predicted_price.toFixed(2);
+                        
+                        // 设置涨跌颜色
+                        const predictedPriceElement = document.getElementById('predicted-price');
+                        if (data.predicted_price > data.latest_close) {
+                            predictedPriceElement.className = 'text-xl font-bold mt-1 text-success';
+                        } else {
+                            predictedPriceElement.className = 'text-xl font-bold mt-1 text-danger';
+                        }
+                        
+                        // 显示涨跌信息
+                        const changeText = data.price_change_percent > 0 
+                            ? `预测上涨: ${Math.abs(data.price_change_percent).toFixed(2)}%` 
+                            : `预测下跌: ${Math.abs(data.price_change_percent).toFixed(2)}%`;
+                        
+                        document.getElementById('prediction-change').textContent = changeText;
+                        document.getElementById('prediction-change').className = data.price_change_percent > 0 
+                            ? 'text-lg font-medium text-success' 
+                            : 'text-lg font-medium text-danger';
+                        
+                        // 生成预测图表
+                        generatePredictionChart(data.stock_code, data.latest_close, data.predicted_price);
+                        
+                        // 平滑滚动到预测结果
+                        document.getElementById('prediction-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        alert('预测失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading('predict-btn');
+                    alert('预测过程中发生错误: ' + error.message);
+                    console.error('预测失败:', error);
+                });
+            });
+            
+            // 批量预测按钮点击
+            document.getElementById('batch-predict-btn').addEventListener('click', function() {
+                const stockCodesInput = document.getElementById('batch-stock-codes').value;
+                
+                if (!stockCodesInput) {
+                    alert('请输入股票代码列表');
+                    return;
+                }
+                
+                // 解析股票代码列表
+                const stockCodes = stockCodesInput.split(',').map(code => code.trim()).filter(code => code);
+                
+                if (stockCodes.length === 0) {
+                    alert('请输入有效的股票代码');
+                    return;
+                }
+                
+                showLoading('batch-predict-btn');
+                
+                axios.post('/api/predict_batch', {
+                    stock_codes: stockCodes,
+                    model_type: 'baseline'
+                })
+                .then(response => {
+                    hideLoading('batch-predict-btn');
+                    
+                    if (response.data.success) {
+                        const results = response.data.results;
+                        
+                        // 显示批量预测结果
+                        const batchResult = document.getElementById('batch-result');
+                        batchResult.classList.remove('hidden');
+                        
+                        // 填充结果表格
+                        const tableBody = document.getElementById('batch-result-body');
+                        let html = '';
+                        
+                        results.forEach(result => {
+                            const isPositive = result['预测涨跌幅(%)'] > 0;
+                            const changeClass = isPositive ? 'text-success' : 'text-danger';
+                            const changeIcon = isPositive ? '<i class="fa fa-arrow-up mr-1"></i>' : '<i class="fa fa-arrow-down mr-1"></i>';
+                            
+                            html += `
+                                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                    <td class="py-3 px-4 border-b">${result['股票代码']}</td>
+                                    <td class="py-3 px-4 border-b">${result['最新收盘价'].toFixed(2)}</td>
+                                    <td class="py-3 px-4 border-b">${result['预测收盘价'].toFixed(2)}</td>
+                                    <td class="py-3 px-4 border-b ${changeClass}">${changeIcon}${Math.abs(result['预测涨跌幅(%)']).toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tableBody.innerHTML = html;
+                        
+                        // 设置下载链接
+                        const downloadLink = document.getElementById('download-result');
+                        downloadLink.href = '/api/download_result?file_path=' + encodeURIComponent(response.data.file_path);
+                        
+                        // 平滑滚动到结果区域
+                        batchResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        alert('批量预测失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading('batch-predict-btn');
+                    alert('批量预测过程中发生错误: ' + error.message);
+                    console.error('批量预测失败:', error);
+                });
+            });
+            
+            // 刷新状态按钮点击
+            document.getElementById('refresh-status').addEventListener('click', function() {
+                refreshSystemStatus();
+                loadModels();
+            });
+        });
+        
+        // 生成预测结果图表
+        function generatePredictionChart(stockCode, latestClose, predictedPrice) {
+            axios.post('/api/generate_chart', {
+                chart_type: 'prediction_result',
+                stock_code: stockCode,
+                latest_close: latestClose,
+                predicted_price: predictedPrice
+            })
+            .then(response => {
+                if (response.data.success) {
+                    const predictionChartContainer = document.getElementById('prediction-chart-container');
+                    predictionChartContainer.classList.remove('hidden');
+                    
+                    const predictionChart = document.getElementById('prediction-chart');
+                    predictionChart.src = 'data:image/png;base64,' + response.data.image_data;
+                }
+            })
+            .catch(error => {
+                console.error('生成预测图表失败:', error);
+            });
+        }
+        
+        // 显示加载状态
+        function showLoading(buttonId) {
+            const button = document.getElementById(buttonId);
+            const originalText = button.innerHTML;
+            button.setAttribute('data-original-text', originalText);
+            button.innerHTML = '<div class="loader mr-2"></div>处理中...';
+            button.disabled = true;
+        }
+        
+        // 隐藏加载状态
+        function hideLoading(buttonId) {
+            const button = document.getElementById(buttonId);
+            const originalText = button.getAttribute('data-original-text');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        // 显示状态消息
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.classList.remove('hidden', 'bg-green-50', 'bg-red-50', 'bg-blue-50', 'text-green-600', 'text-red-600', 'text-blue-600');
+            
+            if (type === 'success') {
+                element.classList.add('bg-green-50', 'text-green-600');
+                element.innerHTML = `<i class="fa fa-check-circle mr-2"></i>${message}`;
+            } else if (type === 'error') {
+                element.classList.add('bg-red-50', 'text-red-600');
+                element.innerHTML = `<i class="fa fa-times-circle mr-2"></i>${message}`;
+            } else if (type === 'loading') {
+                element.classList.add('bg-blue-50', 'text-blue-600');
+                element.innerHTML = `<i class="fa fa-spinner fa-spin mr-2"></i>${message}`;
+            }
+        }
+        
+        // 显示通知
+        function showNotification(message, type) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-500 ease-in-out z-50 ${type === 'success' ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa ${type === 'success' ? 'fa-check-circle' : 'fa-times-circle'} mr-2 text-xl"></i>
+                    <span>${message}</span>
+                    <button class="ml-4 text-gray-400 hover:text-gray-600">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // 添加到body
+            document.body.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 10);
+            
+            // 自动关闭
+            const closeTimeout = setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 5000);
+            
+            // 点击关闭按钮
+            notification.querySelector('button').addEventListener('click', () => {
+                clearTimeout(closeTimeout);
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
