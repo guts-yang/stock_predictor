@@ -53,3 +53,6 @@ desktop.ini
 tmp/
 temp/
 *.tmp
+
+# 环境变量文件
+.env

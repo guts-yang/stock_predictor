@@ -1,7 +1,13 @@
 # 股票预测系统配置文件
 
+import os
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
 # Tushare API配置
-TUSHARE_TOKEN = '69928e0046d63ab5cb45b1e54e787af2773cdfd7e18159a72cc562b0'  # 用户提供的token_key
+TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN', '')  # 从环境变量读取API Token
 TUSHARE_TIMEOUT = 10  # API请求超时时间(秒)
 TUSHARE_RETRY_TIMES = 3  # API请求失败重试次数
 
@@ -23,7 +29,7 @@ DEFAULT_HIDDEN_SIZE = 64  # 默认隐藏层大小
 DEFAULT_NUM_LAYERS = 2  # 默认LSTM层数
 DEFAULT_SEQUENCE_LENGTH = 5  # 默认序列长度
 DEFAULT_BATCH_SIZE = 32  # 默认批次大小
-DEFAULT_LEARNING_RATE = 0.00091  # 默认学习率
+DEFAULT_LEARNING_RATE = 0.001 # 默认学习率
 DEFAULT_EPOCHS = 100  # 默认最大训练轮数
 DEFAULT_PATIENCE = 10  # 默认早停耐心值
 
