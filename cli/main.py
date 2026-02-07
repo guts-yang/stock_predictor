@@ -20,14 +20,19 @@
 """
 
 import os
+import sys
+
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import torch
-from stock_data import get_device, save_stock_data
-from train_stock_model import train_stock_model
-from predict_stock import main_predict, batch_predict_stocks, get_default_model_path
+from backend.core.stock_data import get_device, save_stock_data
+from backend.services.train_stock_model import train_stock_model
+from backend.services.predict_stock import main_predict, batch_predict_stocks, get_default_model_path
 import pandas as pd
 
 # 导入配置文件
-from config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, DEFAULT_MODEL_TYPE
+from backend.core.config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, DEFAULT_MODEL_TYPE
 
 def clear_screen():
     """清屏函数

@@ -18,6 +18,9 @@ from datetime import datetime, timedelta
 import time
 import webbrowser
 
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 # 确保目录存在
 def ensure_directories():
     """确保必要的目录存在"""
@@ -26,7 +29,7 @@ def ensure_directories():
         os.makedirs(directory, exist_ok=True)
 
 # 添加股票数据模块导入，用于获取股票名称
-from stock_data import get_stock_name
+from backend.core.stock_data import get_stock_name
 
 # 设置中文字体
 plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
@@ -49,15 +52,17 @@ import uuid
 import json
 
 # 导入项目模块
-from stock_data import fetch_stock_data, save_stock_data, get_latest_stock_data, get_device
-from train_stock_model import train_stock_model
-from predict_stock import main_predict, batch_predict_stocks, load_trained_model, predict_stock_price, get_default_model_path, plot_kline_prediction
-from stock_selector import StockSelector
-from financial_visualization import create_financial_visualizer
-from config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, MODELS_DIR, RESULTS_DIR, PLOTS_DIR, TUSHARE_TOKEN, MAX_BATCH_PREDICTION, SYSTEM_VERSION
+from backend.core.stock_data import fetch_stock_data, save_stock_data, get_latest_stock_data, get_device
+from backend.core.config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, MODELS_DIR, RESULTS_DIR, PLOTS_DIR, TUSHARE_TOKEN, MAX_BATCH_PREDICTION, SYSTEM_VERSION
+from backend.services.train_stock_model import train_stock_model
+from backend.services.predict_stock import main_predict, batch_predict_stocks, load_trained_model, predict_stock_price, get_default_model_path, plot_kline_prediction
+from backend.services.stock_selector import StockSelector
+from backend.services.financial_visualization import create_financial_visualizer
 
 # 创建Flask应用
-app = Flask(__name__)
+app = Flask(__name__,
+            template_folder='../../frontend/templates',
+            static_folder='../../frontend/static')
 app.config['JSON_SORT_KEYS'] = False  # 保持JSON响应中键的顺序
 app.config['JSON_AS_ASCII'] = False    # 确保中文正常显示
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 设置最大内容长度为16MB

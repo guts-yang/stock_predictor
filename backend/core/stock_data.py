@@ -29,14 +29,19 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import torch
 from sklearn.preprocessing import StandardScaler
 import os
+import sys
+
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from datetime import datetime
 import time
 
 # 导入缓存管理器
-from cache_manager import cache_manager
+from backend.core.cache_manager import cache_manager
 
 # 导入配置文件
-from config import TUSHARE_TOKEN, TUSHARE_TIMEOUT, TUSHARE_RETRY_TIMES, DATA_DIR, STOCK_FEATURES, TARGET_FEATURE, DEFAULT_SEQUENCE_LENGTH
+from backend.core.config import TUSHARE_TOKEN, TUSHARE_TIMEOUT, TUSHARE_RETRY_TIMES, DATA_DIR, STOCK_FEATURES, TARGET_FEATURE, DEFAULT_SEQUENCE_LENGTH
 
 # 设置Tushare的token_key
 if TUSHARE_TOKEN:

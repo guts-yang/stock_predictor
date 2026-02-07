@@ -28,14 +28,19 @@ import torch
 from torch import nn
 import torch.optim as optim
 import os
+import sys
+
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 import matplotlib.pyplot as plt
-from stock_data import load_stock_data, get_device
-from stock_model import get_model
+from backend.core.stock_data import load_stock_data, get_device
+from backend.core.stock_model import get_model
 import pandas as pd
 
 # 导入配置文件
-from config import DEFAULT_MODEL_TYPE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, MODELS_DIR, TEST_SIZE, RANDOM_STATE, USE_GPU, EARLY_STOPPING_ENABLED, EARLY_STOPPING_MIN_DELTA, LR_SCHEDULER_ENABLED, LR_SCHEDULER_STEP_SIZE, LR_SCHEDULER_GAMMA, AUTO_SAVE_MODEL, AUTO_SAVE_INTERVAL
-from stock_data import get_stock_name
+from backend.core.config import DEFAULT_MODEL_TYPE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, MODELS_DIR, TEST_SIZE, RANDOM_STATE, USE_GPU, EARLY_STOPPING_ENABLED, EARLY_STOPPING_MIN_DELTA, LR_SCHEDULER_ENABLED, LR_SCHEDULER_STEP_SIZE, LR_SCHEDULER_GAMMA, AUTO_SAVE_MODEL, AUTO_SAVE_INTERVAL
+from backend.core.stock_data import get_stock_name
 
 # 设置中文字体显示
 plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]

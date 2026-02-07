@@ -25,6 +25,11 @@
 """
 
 import os
+import sys
+
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,8 +37,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import mplfinance as mpf
 
-from config import *
-from stock_data import get_latest_stock_data
+from backend.core.config import *
+from backend.core.stock_data import get_latest_stock_data
 
 # 加载训练好的模型
 def load_trained_model(stock_code, model_type='baseline', model_dir=None):

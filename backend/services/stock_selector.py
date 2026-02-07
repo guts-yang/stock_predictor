@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime, timedelta
 import os
+import sys
+
+# 添加项目根目录到Python路径（支持新的模块结构）
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 import time
 import random
 from sklearn.preprocessing import MinMaxScaler
@@ -15,8 +20,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 导入配置
-from config import (
-    TUSHARE_TOKEN, DATA_DIR, PLOTS_DIR, TRADING_DAYS_PER_YEAR, 
+from backend.core.config import (
+    TUSHARE_TOKEN, DATA_DIR, PLOTS_DIR, TRADING_DAYS_PER_YEAR,
     TRADING_DAYS_PER_MONTH, EXPORT_FORMAT, EXPORT_ENCODING
 )
 
