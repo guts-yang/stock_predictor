@@ -1,5 +1,22 @@
 # 股票价格预测系统 🚀
 
+<div align="center">
+
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-%E2%89%A52.0.0-EE4C2C?logo=pytorch&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-Latest-000000?logo=flask)
+![Pandas](https://img.shields.io/badge/Pandas-%E2%89%A52.0.0-150458?logo=pandas&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-%E2%89%A51.24.0-013243?logo=numpy&logoColor=white)
+![Scikit-learn](https://img.shields.io/badge/scikit--learn-%E2%89%A51.2.0-F7931E?logo=scikit-learn&logoColor=white)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-%E2%89%A53.7.0-11557C?logo=matplotlib&logoColor=white)
+![Tushare](https://img.shields.io/badge/Tushare-%E2%89%A51.2.80-red.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)
+
+</div>
+
+<br>
+
 基于深度学习的股票价格预测系统，集成了Tushare金融数据平台，使用LSTM模型进行智能股票价格预测。
 
 ![首页截图](figures/home_1.png)
@@ -26,26 +43,36 @@
 
 ```bash
 # 1. 克隆项目
-git clone <repository-url>
+git clone https://github.com/guts-yang/stock_predictor
 cd stock_predictor
 
 # 2. 安装依赖
 pip install -r requirements.txt
 
 # 3. 配置Tushare API Token
-# 编辑 config.py，设置 TUSHARE_TOKEN
+# 编辑 .env 设置 TUSHARE_TOKEN
 ```
 
 ### 一键启动
 
+**Web界面**:
 ```bash
 # Windows系统
 start_server.bat
 
-# 或者直接运行
-python app.py
+# Linux/Mac系统
+chmod +x start_server.sh
+./start_server.sh
+
+# 或直接运行
+python backend/api/app.py
 
 # 访问 http://localhost:5000
+```
+
+**命令行界面**:
+```bash
+python cli/main.py
 ```
 
 ## 🎯 核心功能
@@ -82,33 +109,43 @@ python app.py
 
 ```
 stock_predictor/
-├── README.md                    # 项目说明文档
-├── app.py                       # Flask Web应用入口
-├── main.py                      # 命令行主程序入口
-├── config.py                    # 系统配置文件
-├── cache_manager.py             # 缓存管理器模块
-├── financial_visualization.py   # 金融数据可视化模块
-├── stock_data.py                # 数据获取与处理模块
-├── stock_model.py               # 模型定义模块
-├── stock_selector.py            # 智能选股模块
-├── train_stock_model.py         # 模型训练模块
-├── predict_stock.py             # 预测模块
-├── requirements.txt             # 依赖包列表
-├── start_server.bat             # 启动脚本（Windows）
-├── .gitignore                   # Git忽略规则
-├── data/                        # 股票数据存储目录
-│   └── stock_000001.SZ_20240101_20241201.csv  # 示例数据
-├── models/                      # 模型存储目录
+├── backend/                      # 后端代码
+│   ├── core/                    # 核心业务逻辑
+│   │   ├── stock_data.py       # 数据获取与处理
+│   │   ├── stock_model.py      # LSTM模型定义
+│   │   ├── cache_manager.py    # 缓存管理
+│   │   └── config.py           # 系统配置
+│   ├── services/                # 服务层
+│   │   ├── train_stock_model.py    # 模型训练
+│   │   ├── predict_stock.py        # 股票预测
+│   │   ├── financial_visualization.py  # 金融可视化
+│   │   └── stock_selector.py        # 智能选股
+│   └── api/                     # Flask API
+│       └── app.py               # Web应用入口
+├── frontend/                    # 前端资源
+│   ├── templates/               # HTML模板
+│   │   ├── index.html          # 主界面
+│   │   └── stock_selector.html # 选股界面
+│   └── static/                  # 静态资源
+│       ├── css/
+│       │   └── main.css
+│       └── js/
+│           ├── data-visualization.js
+│           └── painting.js
+├── cli/                         # 命令行工具
+│   └── main.py                 # CLI入口
+├── data/                        # 数据存储目录
+├── models/                      # 模型文件目录
 ├── plots/                       # 图表存储目录
-├── static/                      # 前端静态资源
-│   ├── css/
-│   │   └── main.css
-│   └── js/
-│       ├── data-visualization.js
-│       └── painting.js
-└── templates/                   # Web界面模板
-    ├── index.html
-    └── stock_selector.html
+├── results/                     # 预测结果目录
+├── logs/                        # 日志目录
+├── figures/                     # 文档图片
+├── README.md                    # 项目说明
+├── requirements.txt             # 依赖列表
+├── .gitignore                   # Git配置
+├── .env.example                 # 环境变量示例
+├── start_server.bat             # 启动脚本
+└── start_server.sh              # Linux启动脚本
 ```
 
 ## 💻 使用指南
@@ -215,6 +252,13 @@ A: 支持A股市场，包括沪深两市所有股票（股票代码格式：0000
 - 🎯 **生产就绪**: 可直接部署使用
 
 ## 📝 更新日志
+
+### v1.5.0 (2025-02-07)
+- 🏗️ **重大架构重构**: 前后端分离，模块化设计
+- 🐛 **修复图表显示**: 修复Plotly图表在Web界面不显示的问题
+- 📦 **依赖更新**: 完善requirements.txt，添加Flask、Flask-CORS等缺失依赖
+- 📚 **文档增强**: 添加版本徽章，提升专业度
+- 🔧 **代码优化**: 改进项目结构，提升可维护性
 
 ### v1.4.0 (2024-12-04)
 - ✨ 添加智能选股功能
