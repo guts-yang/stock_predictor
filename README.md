@@ -19,8 +19,8 @@
 
 基于深度学习的股票价格预测系统，集成了Tushare金融数据平台，使用LSTM模型进行智能股票价格预测。
 
-![首页截图](figures/home_1.png)
-![预测图表](figures/plot_1.png)
+![首页截图](docs/figures/home_1.png)
+![预测图表](docs/figures/plot_1.png)
 
 ## 🌟 特性
 
@@ -58,11 +58,11 @@ pip install -r requirements.txt
 **Web界面**:
 ```bash
 # Windows系统
-start_server.bat
+scripts/start_server.bat
 
 # Linux/Mac系统
-chmod +x start_server.sh
-./start_server.sh
+chmod +x scripts/start_server.sh
+./scripts/start_server.sh
 
 # 或直接运行
 python backend/api/app.py
@@ -111,6 +111,10 @@ python cli/main.py
 stock_predictor/
 ├── backend/                      # 后端代码
 │   ├── core/                    # 核心业务逻辑
+│   │   ├── database/           # 数据库模块
+│   │   │   ├── connection.py   # 数据库连接管理
+│   │   │   ├── models.py       # ORM模型定义
+│   │   │   └── repositories.py # Repository数据访问层
 │   │   ├── stock_data.py       # 数据获取与处理
 │   │   ├── stock_model.py      # LSTM模型定义
 │   │   ├── cache_manager.py    # 缓存管理
@@ -134,18 +138,19 @@ stock_predictor/
 │           └── painting.js
 ├── cli/                         # 命令行工具
 │   └── main.py                 # CLI入口
-├── data/                        # 数据存储目录
-├── models/                      # 模型文件目录
-├── plots/                       # 图表存储目录
-├── results/                     # 预测结果目录
+├── scripts/                     # 脚本工具
+│   ├── init_db.py              # 数据库初始化脚本
+│   ├── start_server.bat        # Windows启动脚本
+│   └── start_server.sh         # Linux/Mac启动脚本
+├── docs/                        # 文档资源
+│   └── figures/                # 文档图片
+│       ├── home_1.png
+│       └── plot_1.png
 ├── logs/                        # 日志目录
-├── figures/                     # 文档图片
 ├── README.md                    # 项目说明
 ├── requirements.txt             # 依赖列表
 ├── .gitignore                   # Git配置
-├── .env.example                 # 环境变量示例
-├── start_server.bat             # 启动脚本
-└── start_server.sh              # Linux启动脚本
+└── .env.example                 # 环境变量示例
 ```
 
 ## 💻 使用指南
@@ -154,33 +159,32 @@ stock_predictor/
 
 ```bash
 # 训练模型
-python train_stock_model.py --code 000001.SZ --start_date 20200101 --end_date 20231231
+python cli/main.py train --code 000001.SZ --start_date 20200101 --end_date 20231231
 
 # 预测股价
-python predict_stock.py --code 000001.SZ --date 20240101
+python cli/main.py predict --code 000001.SZ --date 20240101
 
 # 智能选股
-python stock_selector.py --strategy momentum --risk_level medium
+python cli/main.py select --strategy momentum --risk_level medium
 ```
 
 ### Web界面方式
 
-1. 启动服务器：`python app.py`
+1. 启动服务器：`scripts/start_server.bat` (Windows) 或 `scripts/start_server.sh` (Linux/Mac)
 2. 访问：`http://localhost:5000`
 3. 使用界面进行数据查询、模型训练和预测
 
 ## ⚙️ 配置说明
 
-主要配置文件：`config.py`
+主要配置文件：`backend/core/config.py`
 
 | 配置参数 | 默认值 | 说明 |
 |----------|--------|------|
-| TUSHARE_TOKEN | - | Tushare API访问令牌 |
-| DATA_DIR | "./data" | 数据文件存储路径 |
-| MODEL_DIR | "./models" | 模型文件存储路径 |
+| TUSHARE_TOKEN | - | Tushare API访问令牌（必需） |
+| USE_DATABASE | True | 是否使用PostgreSQL数据库 |
 | PREDICTION_HORIZON | 5 | 预测未来天数 |
 | BATCH_SIZE | 32 | 批处理大小 |
-| LEARNING_RATE | 0.00091 | 学习率 |
+| LEARNING_RATE | 0.001 | 学习率 |
 | EPOCHS | 100 | 训练轮数 |
 
 ## 🚀 部署指南
@@ -206,7 +210,7 @@ docker build -t stock-predictor .
 docker run -p 5000:5000 stock-predictor
 ```
 
-## 🗄️ 数据库配置（可选，v2.0.0新增）
+## 🗄️ 数据库配置（v2.0.0新增）
 
 本项目支持PostgreSQL数据库存储股票数据和模型，提供更好的数据管理和查询性能。
 
@@ -222,8 +226,8 @@ docker run -d \
   -p 5432:5432 \
   postgres:16-alpine
 
-# 初始化数据库并迁移现有数据
-python init_db.py
+# 初始化数据库
+python scripts/init_db.py
 ```
 
 ### 使用本地PostgreSQL
@@ -243,21 +247,20 @@ python init_db.py
    ```
 4. 初始化数据库:
    ```bash
-   python init_db.py
+   python scripts/init_db.py
    ```
 
 ### 切换存储模式
 
 在`backend/core/config.py`中设置:
 ```python
-USE_DATABASE = True   # 使用PostgreSQL（需要先运行 init_db.py）
-USE_DATABASE = False  # 使用本地文件（默认模式）
+USE_DATABASE = True   # 使用PostgreSQL（默认，推荐）
+USE_DATABASE = False  # 使用本地文件（兼容旧版本）
 ```
 
 **注意**:
-- 数据库模式为可选功能，默认使用文件存储
-- 迁移前请确保PostgreSQL服务已启动
-- 迁移过程会保留所有现有数据
+- 数据库模式为默认配置，提供更好的性能和数据管理
+- 如需使用文件模式，请先确保data/和models/目录存在
 - 可以随时在文件和数据库模式间切换
 
 ## 🔒 安全注意事项
@@ -276,11 +279,11 @@ USE_DATABASE = False  # 使用本地文件（默认模式）
 ### Q: 如何获取Tushare API Token？
 A: 访问 [Tushare官网](https://tushare.pro/) 注册账号，在个人中心获取API Token。
 
-### Q: 数据文件存储在哪里？
-A: 数据文件存储在 `data/` 目录，可以随时删除，系统会自动重新获取。
+### Q: 数据存储在哪里？
+A: 默认使用PostgreSQL数据库存储。如需切换到文件模式，修改`backend/core/config.py`中的`USE_DATABASE = False`。
 
-### Q: 模型文件可以删除吗？
-A: 可以。模型文件存储在 `models/` 目录，删除后可以重新训练。
+### Q: 如何重新初始化数据库？
+A: 运行 `python scripts/init_db.py` 可以重新初始化数据库和迁移数据。
 
 ### Q: 预测准确率如何？
 A: 预测准确率受多种因素影响，建议结合多种技术指标和分析方法使用。

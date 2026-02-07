@@ -23,19 +23,22 @@ pip-delete-this-directory.txt
 .pydevproject
 
 # 项目特定文件
-data/*.csv
-data/.cache_metadata.json
-models/*.pth
-models/*.pt
-models/*.h5
-models/*.keras
-plots/*.png
-plots/*.jpg
-plots/*.jpeg
-plots/*.svg
-logs/
+data/
+models/
+plots/
 results/
 *.log
+logs/*.log
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 测试和临时文件
+test_*.py
+verify_*.py
+*.tmp
 
 # 第三方工具
 .trae/
