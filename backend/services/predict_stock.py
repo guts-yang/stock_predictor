@@ -44,18 +44,46 @@ from backend.core.stock_data import get_latest_stock_data
 def load_trained_model(stock_code, model_type='baseline', model_dir=None):
     """
     加载训练好的股票预测模型
-    
+
     参数:
     stock_code: 股票代码
     model_type: 模型类型，可选 'baseline', 'lstm', 'kline_lstm'
     model_dir: 模型存储目录，如果是完整文件路径则直接使用
-    
+
     返回:
     加载的模型对象，如果加载失败则返回None
     """
     try:
+        from backend.core.config import USE_DATABASE
+
+        # 优先从数据库加载
+        if USE_DATABASE:
+            from backend.core.database.connection import get_db_session
+            from backend.core.database.repositories import ModelRepository
+            from backend.core.stock_model import get_model
+
+            with get_db_session() as session:
+                checkpoint, db_model = ModelRepository.load_model(session, stock_code, model_type)
+
+                if checkpoint and db_model:
+                    print(f"✅ 从数据库加载模型: {stock_code} ({model_type})")
+                    # 创建模型实例
+                    model = get_model(
+                        model_type=checkpoint.get('model_type', model_type),
+                        input_size=checkpoint.get('input_size', 1),
+                        hidden_size=checkpoint.get('hidden_size', 64),
+                        output_size=checkpoint.get('output_size', 1),
+                        num_layers=checkpoint.get('num_layers', 2)
+                    )
+                    model.load_state_dict(checkpoint['model_state_dict'])
+                    model.eval()
+                    return model
+                else:
+                    print(f"⚠️  数据库中未找到模型: {stock_code} ({model_type})，尝试从文件加载")
+
+        # 从文件加载（后备方案）
         model_path = None
-        
+
         # 检查model_dir是否为完整的模型文件路径
         if model_dir and os.path.isfile(model_dir):
             # 如果model_dir是一个文件，直接使用它作为模型路径
@@ -64,28 +92,28 @@ def load_trained_model(stock_code, model_type='baseline', model_dir=None):
             # 如果未指定模型目录，使用默认目录
             if model_dir is None:
                 model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
-            
+
             # 确保模型目录存在
             if not os.path.exists(model_dir):
                 print(f"模型目录不存在: {model_dir}")
                 return None
-            
+
             # 根据模型类型构建文件名
             model_filename = f"{stock_code}_{model_type}_best.pth"
             model_path = os.path.join(model_dir, model_filename)
-        
+
         # 检查模型文件是否存在
         if not os.path.exists(model_path):
             print(f"模型文件不存在: {model_path}")
             return None
-        
+
         # 打印详细的调试信息
         print(f"正在加载模型文件: {model_path}")
         print(f"文件大小: {os.path.getsize(model_path)} 字节")
-        
+
         # 加载模型文件
         checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-        
+
         # 检查是否是字典格式的模型文件
         if isinstance(checkpoint, dict):
             # 尝试从字典中获取模型
@@ -94,14 +122,14 @@ def load_trained_model(stock_code, model_type='baseline', model_dir=None):
             elif 'model_state_dict' in checkpoint:
                 # 如果只有状态字典，尝试导入模型类并重建
                 try:
-                    from stock_model import get_model
+                    from backend.core.stock_model import get_model
                     # 尝试获取模型参数
                     model_type = checkpoint.get('model_type', model_type)
                     input_size = checkpoint.get('input_size', 1)
                     hidden_size = checkpoint.get('hidden_size', 64)
                     output_size = checkpoint.get('output_size', 1)
                     num_layers = checkpoint.get('num_layers', 1)
-                    
+
                     # 创建模型实例
                     model = get_model(model_type, input_size, hidden_size, output_size, num_layers)
                     # 加载模型状态
@@ -117,7 +145,7 @@ def load_trained_model(stock_code, model_type='baseline', model_dir=None):
         else:
             # 直接是模型对象
             model = checkpoint
-        
+
         print(f"成功加载模型: {model_path}")
         return model
     except Exception as e:

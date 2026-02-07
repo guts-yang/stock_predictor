@@ -447,26 +447,32 @@ def get_latest_stock_data(stock_code, sequence_length=5, model_type='baseline'):
 
 # 保存获取的股票数据到本地
 def save_stock_data(stock_code, start_date, end_date, save_dir=DATA_DIR):
-    """获取并保存股票数据，利用缓存管理器优化"""
-    # 创建保存目录
-    os.makedirs(save_dir, exist_ok=True)
-    
+    """获取并保存股票数据，支持数据库和文件存储"""
+    from backend.core.config import USE_DATABASE
+
     # 首先尝试从缓存获取数据
     cache_key = f"stock_{stock_code}"
     df = cache_manager.get_cached_data(cache_key, (start_date, end_date))
-    
+
     # 如果缓存中没有，从API获取
     if df is None:
         df = fetch_stock_data(stock_code, start_date, end_date)
-    
+
     if df is not None and not df.empty:
-        # 生成文件名
-        filename = f"{stock_code}_{start_date}_{end_date}.csv"
-        filepath = os.path.join(save_dir, filename)
-        
-        # 保存数据
-        df.to_csv(filepath, encoding='utf-8-sig')
-        print(f"股票数据已保存至: {filepath}")
+        if USE_DATABASE:
+            # 使用数据库存储
+            from backend.core.database.connection import get_db_session
+            from backend.core.database.repositories import StockRepository
+            with get_db_session() as session:
+                stock, count = StockRepository.save_stock_data(session, stock_code, df)
+                print(f"✅ 数据库保存成功: {stock_code} ({count} 条记录)")
+        else:
+            # 使用CSV文件存储
+            os.makedirs(save_dir, exist_ok=True)
+            filename = f"{stock_code}_{start_date}_{end_date}.csv"
+            filepath = os.path.join(save_dir, filename)
+            df.to_csv(filepath, encoding='utf-8-sig')
+            print(f"股票数据已保存至: {filepath}")
         return True
     else:
         print(f"无法保存股票 {stock_code} 的数据")

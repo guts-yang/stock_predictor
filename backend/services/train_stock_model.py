@@ -207,20 +207,47 @@ def train_stock_model(stock_code, start_date, end_date,
         if avg_test_loss < best_loss:
             best_loss = avg_test_loss
             early_stop_counter = 0
-            
+
             # 保存最佳模型
-            model_path = os.path.join(model_dir, f'{stock_code}_{model_type}_best.pth')
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'stock_code': stock_code,
-                'model_type': model_type,
-                'input_size': input_size,
-                'hidden_size': hidden_size,
-                'output_size': output_size,
-                'num_layers': num_layers,
-                'sequence_length': sequence_length
-            }, model_path)
-            print(f"最佳模型已保存到: {model_path}")
+            from backend.core.config import USE_DATABASE
+            if USE_DATABASE:
+                # 保存到数据库
+                from backend.core.database.connection import get_db_session
+                from backend.core.database.repositories import ModelRepository
+                with get_db_session() as session:
+                    # 停用旧模型
+                    ModelRepository.deactivate_old_models(session, stock_code, model_type)
+
+                    # 保存新模型
+                    metadata = {
+                        'model_type': model_type,
+                        'input_size': input_size,
+                        'hidden_size': hidden_size,
+                        'output_size': output_size,
+                        'num_layers': num_layers,
+                        'sequence_length': sequence_length,
+                        'training_loss': min(train_losses),
+                        'validation_loss': min(test_losses),
+                        'epochs': epoch + 1
+                    }
+                    db_model = ModelRepository.save_model(session, stock_code, model, metadata)
+                    print(f"✅ 模型已保存到数据库: {db_model.model_name}")
+                    # 保存文件路径用于向后兼容
+                    model_path = os.path.join(model_dir, f'{stock_code}_{model_type}_best.pth')
+            else:
+                # 保存到文件
+                model_path = os.path.join(model_dir, f'{stock_code}_{model_type}_best.pth')
+                torch.save({
+                    'model_state_dict': model.state_dict(),
+                    'stock_code': stock_code,
+                    'model_type': model_type,
+                    'input_size': input_size,
+                    'hidden_size': hidden_size,
+                    'output_size': output_size,
+                    'num_layers': num_layers,
+                    'sequence_length': sequence_length
+                }, model_path)
+                print(f"最佳模型已保存到: {model_path}")
         else:
             early_stop_counter += 1
             if early_stop_counter >= patience:
