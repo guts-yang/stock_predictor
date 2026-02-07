@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能选股 - 股票预测系统</title>
+    <!-- 引入外部资源 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: #333;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 0.5rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .form-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #e6f7ff;
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        th {
+            background-color: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: #999;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 1rem;
+        }
+        
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                margin: 1rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-item {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>智能选股系统</h1>
+        <p>多维度股票分析与投资推荐</p>
+    </div>
+    
+    <div class="main-content">
+        <!-- 股票池选择 -->
+        <div class="card">
+            <h2>股票池选择</h2>
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="market">市场：</label>
+                    <select id="market" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                        <option value="A">A股</option>
+                        <option value="SZ">深圳</option>
+                        <option value="SH">上海</option>
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label for="industry">行业：</label>
+                    <select id="industry" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                        <option value="">全部行业</option>
+                        <!-- 行业选项将在加载时动态添加 -->
+                    </select>
+                </div>
+                <div class="form-item" style="display: flex; align-items: flex-end;">
+                    <button id="fetch-pool-btn" class="btn-primary" style="width: 100%;">获取股票池</button>
+                </div>
+            </div>
+            <div id="pool-info" style="margin-top: 1rem; color: #666; font-size: 0.9rem;"></div>
+        </div>
+        
+        <!-- 参数设置 -->
+        <div class="card">
+            <h2>分析参数设置</h2>
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="start-date">开始日期：</label>
+                    <input type="date" id="start-date" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="end-date">结束日期：</label>
+                    <input type="date" id="end-date" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="stock-limit">分析股票数量：</label>
+                    <input type="number" id="stock-limit" value="50" min="1" max="500" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1.2rem; color: #333;">指标权重设置</h3>
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="weight-return">收益率权重：</label>
+                    <input type="number" id="weight-return" value="0.3" min="0" max="1" step="0.05" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="weight-volatility">波动率权重：</label>
+                    <input type="number" id="weight-volatility" value="0.2" min="0" max="1" step="0.05" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="weight-beta">Beta系数权重：</label>
+                    <input type="number" id="weight-beta" value="0.2" min="0" max="1" step="0.05" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="weight-volume">成交量权重：</label>
+                    <input type="number" id="weight-volume" value="0.1" min="0" max="1" step="0.05" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="weight-rsi">RSI权重：</label>
+                    <input type="number" id="weight-rsi" value="0.2" min="0" max="1" step="0.05" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="top-n">选择最优股票数量：</label>
+                    <input type="number" id="top-n" value="10" min="1" max="100" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+                <div class="form-item">
+                    <label for="min-score">最低评分要求：</label>
+                    <input type="number" id="min-score" value="60" min="0" max="100" style="width: 100%; padding: 0.5rem; border: 1px solid #d9d9d9; border-radius: 4px;">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <button id="analyze-btn" class="btn-primary" style="flex: 1;">开始分析</button>
+                <button id="score-btn" class="btn-secondary" style="flex: 1;">评分股票</button>
+                <button id="select-btn" class="btn-secondary" style="flex: 1;">选择最优</button>
+            </div>
+        </div>
+        
+        <!-- 分析结果 -->
+        <div class="card">
+            <h2>分析结果</h2>
+            <div id="analysis-stats" class="result-stats" style="display: none;"></div>
+            <div class="table-container">
+                <div id="analysis-loading" class="loading">加载中...</div>
+                <table id="result-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>股票代码</th>
+                            <th>股票名称</th>
+                            <th>日收益率</th>
+                            <th>周收益率</th>
+                            <th>月收益率</th>
+                            <th>波动率</th>
+                            <th>Beta系数</th>
+                            <th>RSI</th>
+                            <th>成交量趋势</th>
+                            <th>综合评分</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-body"></tbody>
+                </table>
+                <div id="no-results" style="display: none; text-align: center; padding: 2rem; color: #999;">暂无分析结果</div>
+            </div>
+        </div>
+        
+        <!-- 可视化展示 -->
+        <div class="card">
+            <h2>结果可视化</h2>
+            <div class="form-row">
+                <button id="visualize-btn" class="btn-secondary">生成可视化图表</button>
+                <button id="export-btn" class="btn-secondary">导出结果</button>
+            </div>
+            <div id="chart-container" class="chart-container" style="display: none;"></div>
+            <img id="visualization-img" style="width: 100%; display: none; margin-top: 1rem; border-radius: 4px;" src="" alt="可视化图表">
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2024 股票预测系统 - 智能选股模块</p>
+    </div>
+    
+    <script>
+        // 初始化日期选择器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期范围
+            const today = new Date();
+            const defaultEndDate = today.toISOString().split('T')[0];
+            
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(today.getMonth() - 3);
+            const defaultStartDate = threeMonthsAgo.toISOString().split('T')[0];
+            
+            document.getElementById('start-date').value = defaultStartDate;
+            document.getElementById('end-date').value = defaultEndDate;
+            
+            // 获取股票池
+            document.getElementById('fetch-pool-btn').addEventListener('click', fetchStockPool);
+            
+            // 分析股票
+            document.getElementById('analyze-btn').addEventListener('click', analyzeStocks);
+            
+            // 评分股票
+            document.getElementById('score-btn').addEventListener('click', scoreStocks);
+            
+            // 选择最优股票
+            document.getElementById('select-btn').addEventListener('click', selectStocks);
+            
+            // 可视化结果
+            document.getElementById('visualize-btn').addEventListener('click', visualizeResults);
+            
+            // 导出结果
+            document.getElementById('export-btn').addEventListener('click', exportResults);
+            
+            // 初始加载时获取股票池
+            fetchStockPool();
+        });
+        
+        // 获取股票池
+        function fetchStockPool() {
+            const market = document.getElementById('market').value;
+            const industry = document.getElementById('industry').value;
+            
+            document.getElementById('pool-info').textContent = '正在获取股票池...';
+            
+            fetch(`/api/get_stock_pool?market=${market}&industry=${industry}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('pool-info').textContent = `成功获取股票池：${data.count}只股票`;
+                        // 可以在这里处理股票池数据
+                    } else {
+                        document.getElementById('pool-info').textContent = `获取失败：${data.message}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取股票池错误:', error);
+                    document.getElementById('pool-info').textContent = '获取股票池时发生错误';
+                });
+        }
+        
+        // 分析股票
+        function analyzeStocks() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const limit = document.getElementById('stock-limit').value;
+            
+            // 显示加载状态
+            document.getElementById('analysis-loading').style.display = 'flex';
+            document.getElementById('result-table').style.display = 'none';
+            document.getElementById('no-results').style.display = 'none';
+            document.getElementById('analysis-stats').style.display = 'none';
+            
+            fetch('/api/analyze_stocks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    limit: parseInt(limit)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('analysis-loading').style.display = 'none';
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    displayResults(data.data);
+                    
+                    // 更新统计信息
+                    updateStats(data.data);
+                } else {
+                    document.getElementById('no-results').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('分析股票错误:', error);
+                document.getElementById('analysis-loading').style.display = 'none';
+                alert('分析股票时发生错误');
+            });
+        }
+        
+        // 评分股票
+        function scoreStocks() {
+            const weights = {
+                return_rate: parseFloat(document.getElementById('weight-return').value),
+                volatility: parseFloat(document.getElementById('weight-volatility').value),
+                beta: parseFloat(document.getElementById('weight-beta').value),
+                volume: parseFloat(document.getElementById('weight-volume').value),
+                rsi: parseFloat(document.getElementById('weight-rsi').value)
+            };
+            
+            fetch('/api/score_stocks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ weights: weights })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    displayResults(data.data);
+                    updateStats(data.data);
+                } else {
+                    alert('评分失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('评分股票错误:', error);
+                alert('评分股票时发生错误');
+            });
+        }
+        
+        // 选择最优股票
+        function selectStocks() {
+            const topN = parseInt(document.getElementById('top-n').value);
+            const minScore = parseFloat(document.getElementById('min-score').value);
+            
+            fetch('/api/select_stocks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    top_n: topN,
+                    min_score: minScore
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    displayResults(data.data);
+                    updateStats(data.data);
+                } else {
+                    alert('选股失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('选择股票错误:', error);
+                alert('选择股票时发生错误');
+            });
+        }
+        
+        // 显示结果
+        function displayResults(results) {
+            const tableBody = document.getElementById('result-body');
+            tableBody.innerHTML = '';
+            
+            results.forEach(stock => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = stock.ts_code || '';
+                row.insertCell(1).textContent = stock.name || '';
+                row.insertCell(2).textContent = (stock.daily_return || 0).toFixed(2) + '%';
+                row.insertCell(3).textContent = (stock.weekly_return || 0).toFixed(2) + '%';
+                row.insertCell(4).textContent = (stock.monthly_return || 0).toFixed(2) + '%';
+                row.insertCell(5).textContent = (stock.volatility || 0).toFixed(4);
+                row.insertCell(6).textContent = (stock.beta || 0).toFixed(2);
+                row.insertCell(7).textContent = (stock.rsi || 0).toFixed(2);
+                row.insertCell(8).textContent = (stock.volume_trend || 0).toFixed(2) + '%';
+                row.insertCell(9).textContent = (stock.score || 0).toFixed(2);
+            });
+            
+            document.getElementById('result-table').style.display = 'table';
+            document.getElementById('no-results').style.display = 'none';
+        }
+        
+        // 更新统计信息
+        function updateStats(results) {
+            const statsContainer = document.getElementById('analysis-stats');
+            
+            // 计算统计数据
+            const totalCount = results.length;
+            const avgScore = results.reduce((sum, stock) => sum + (stock.score || 0), 0) / totalCount;
+            const avgReturn = results.reduce((sum, stock) => sum + (stock.monthly_return || 0), 0) / totalCount;
+            const bestStock = results.reduce((best, current) => 
+                (current.score || 0) > (best.score || 0) ? current : best, 
+                results[0]
+            );
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">分析股票总数</div>
+                    <div class="stat-number">${totalCount}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均评分</div>
+                    <div class="stat-number">${avgScore.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均月收益率</div>
+                    <div class="stat-number">${avgReturn.toFixed(2)}%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">最佳股票</div>
+                    <div class="stat-number">${bestStock.name || bestStock.ts_code}</div>
+                </div>
+            `;
+            
+            statsContainer.style.display = 'grid';
+        }
+        
+        // 可视化结果
+        function visualizeResults() {
+            const filename = 'stock_selection_' + new Date().toISOString().split('T')[0];
+            
+            fetch('/api/visualize_selection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filename: filename })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 显示图表
+                    document.getElementById('visualization-img').src = data.url;
+                    document.getElementById('visualization-img').style.display = 'block';
+                } else {
+                    alert('可视化失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('可视化错误:', error);
+                alert('可视化时发生错误');
+            });
+        }
+        
+        // 导出结果
+        function exportResults() {
+            const filename = 'stock_selection_' + new Date().toISOString().split('T')[0];
+            
+            fetch('/api/export_selection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filename: filename,
+                    format: 'csv'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.href = '/results/' + data.filename;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('导出失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('导出错误:', error);
+                alert('导出时发生错误');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -130,6 +130,8 @@
                     <a href="#predict" class="font-medium hover:text-primary transition-colors duration-300">股票预测</a>
                     <a href="#batch" class="font-medium hover:text-primary transition-colors duration-300">批量预测</a>
                     <a href="#models" class="font-medium hover:text-primary transition-colors duration-300">模型管理</a>
+                    <a href="#painting" class="font-medium hover:text-primary transition-colors duration-300">图像绘画</a>
+                    <a href="/stock_selector" class="font-medium text-primary font-bold transition-colors duration-300">智能选股</a>
                 </nav>
                 
                 <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
@@ -147,6 +149,8 @@
                 <a href="#predict" class="block py-2 hover:text-primary transition-colors duration-300">股票预测</a>
                 <a href="#batch" class="block py-2 hover:text-primary transition-colors duration-300">批量预测</a>
                 <a href="#models" class="block py-2 hover:text-primary transition-colors duration-300">模型管理</a>
+                <a href="#painting" class="block py-2 hover:text-primary transition-colors duration-300">图像绘画</a>
+                <a href="/stock_selector" class="block py-2 text-primary font-bold transition-colors duration-300">智能选股</a>
             </div>
         </div>
     </header>
@@ -301,6 +305,50 @@
                     <div id="fetch-data-status" class="mt-4 hidden"></div>
                 </section>
 
+                <!-- 专业金融数据可视化 -->
+                <section id="financial-visualization" class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-dark mb-4">
+                        <i class="fa fa-chart-line mr-2 text-primary"></i>专业金融数据可视化
+                    </h2>
+                    <form id="financial-viz-form" class="space-y-4">
+                        <div>
+                            <label for="viz-stock-code" class="block text-sm font-medium text-gray-700 mb-1">股票代码</label>
+                            <input type="text" id="viz-stock-code" name="viz-stock-code" placeholder="例如: 000001.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="viz-start-date" class="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+                                <input type="text" id="viz-start-date" name="viz-start-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                            <div>
+                                <label for="viz-end-date" class="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+                                <input type="text" id="viz-end-date" name="viz-end-date" placeholder="YYYYMMDD" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">图表类型</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="chart-kline" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    <span class="ml-2 text-sm">K线图</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="chart-technical" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    <span class="ml-2 text-sm">技术指标</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="chart-volume" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    <span class="ml-2 text-sm">成交量</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" id="generate-viz-btn" class="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
+                            <i class="fa fa-chart-area mr-2"></i>生成专业图表
+                        </button>
+                    </form>
+                    <div id="viz-status" class="mt-4 hidden"></div>
+                </section>
+
                 <!-- 训练模型 -->
                 <section id="train" class="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h2 class="text-xl font-bold text-dark mb-4">训练预测模型</h2>
@@ -353,11 +401,154 @@
                             <label for="patience" class="block text-sm font-medium text-gray-700 mb-1">早停耐心值</label>
                             <input type="number" id="patience" name="patience" value="10" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
                         </div>
+                        <div>
+                            <label for="model-type" class="block text-sm font-medium text-gray-700 mb-1">模型类型</label>
+                            <select id="model-type" name="model-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                                <option value="baseline">基线模型 (仅收盘价)</option>
+                                <option value="kline">K线模型 (开盘价、收盘价、最高价、最低价、成交量)</option>
+                            </select>
+                        </div>
                         <button type="submit" id="train-model-btn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
                             <i class="fa fa-cogs mr-2"></i>开始训练
                         </button>
                     </form>
                     <div id="train-status" class="mt-4 hidden"></div>
+                </section>
+
+                <!-- 图像绘画功能 -->
+                <section id="painting" class="bg-white rounded-xl shadow-md p-6 mb-6 hidden">
+                    <h2 class="text-xl font-bold text-dark mb-4">
+                        <i class="fa fa-paint-brush mr-2 text-primary"></i>图像绘画功能
+                    </h2>
+                    
+                    <!-- 画布工具栏 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 items-end">
+                            <!-- 画笔颜色 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">画笔颜色</label>
+                                <input type="color" id="brush-color" value="#000000" class="w-full h-10 rounded border border-gray-300 cursor-pointer">
+                            </div>
+                            
+                            <!-- 画笔大小 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">画笔大小</label>
+                                <input type="range" id="brush-size" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="brush-size-value" class="text-sm text-gray-600">5px</span>
+                            </div>
+                            
+                            <!-- 画笔透明度 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">透明度</label>
+                                <input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="brush-opacity-value" class="text-sm text-gray-600">100%</span>
+                            </div>
+                            
+                            <!-- 画布大小 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">画布大小</label>
+                                <select id="canvas-size" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                    <option value="800x600">800×600</option>
+                                    <option value="1024x768">1024×768</option>
+                                    <option value="1200x800">1200×800</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 自定义宽高（当选择自定义时显示） -->
+                            <div id="custom-size-container" class="hidden grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">宽度</label>
+                                    <input type="number" id="canvas-width" min="200" max="2000" value="800" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">高度</label>
+                                    <input type="number" id="canvas-height" min="200" max="1500" value="600" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                </div>
+                            </div>
+                            
+                            <!-- 工具按钮 -->
+                            <div class="flex flex-col gap-2">
+                                <button id="new-canvas-btn" class="bg-success hover:bg-success/90 text-white px-3 py-2 rounded text-sm flex items-center justify-center transition-colors duration-300">
+                                    <i class="fa fa-plus mr-1"></i>新建
+                                </button>
+                                <button id="clear-canvas-btn" class="bg-warning hover:bg-warning/90 text-white px-3 py-2 rounded text-sm flex items-center justify-center transition-colors duration-300">
+                                    <i class="fa fa-eraser mr-1"></i>清空
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 第二行工具 -->
+                        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200">
+                            <button id="pen-tool-btn" class="tool-btn active bg-primary text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-pen mr-1"></i>画笔
+                            </button>
+                            <button id="eraser-tool-btn" class="tool-btn bg-gray-500 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-eraser mr-1"></i>橡皮擦
+                            </button>
+                            <button id="line-tool-btn" class="tool-btn bg-gray-500 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-minus mr-1"></i>直线
+                            </button>
+                            <button id="rect-tool-btn" class="tool-btn bg-gray-500 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-square-o mr-1"></i>矩形
+                            </button>
+                            <button id="circle-tool-btn" class="tool-btn bg-gray-500 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-circle-o mr-1"></i>圆形
+                            </button>
+                            <button id="text-tool-btn" class="tool-btn bg-gray-500 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-font mr-1"></i>文字
+                            </button>
+                            
+                            <div class="flex-1"></div>
+                            
+                            <button id="undo-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300" disabled>
+                                <i class="fa fa-undo mr-1"></i>撤销
+                            </button>
+                            <button id="redo-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300" disabled>
+                                <i class="fa fa-redo mr-1"></i>重做
+                            </button>
+                            <button id="save-painting-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-save mr-1"></i>保存
+                            </button>
+                            <button id="export-png-btn" class="bg-success hover:bg-success/90 text-white px-4 py-2 rounded text-sm flex items-center transition-colors duration-300">
+                                <i class="fa fa-download mr-1"></i>导出PNG
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 绘画画布 -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg bg-white overflow-auto" style="max-height: 600px;">
+                        <div class="flex justify-center items-center p-4">
+                            <canvas id="painting-canvas" class="border border-gray-200 rounded shadow-sm cursor-crosshair"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 文字输入（当选择文字工具时显示） -->
+                    <div id="text-input-container" class="hidden mt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">文字内容</label>
+                                <input type="text" id="text-content" placeholder="输入要添加的文字" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">字体大小</label>
+                                <input type="number" id="text-size" min="8" max="72" value="16" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            </div>
+                            <div class="flex items-end">
+                                <button id="add-text-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                                    <i class="fa fa-plus mr-1"></i>添加文字
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 画作列表 -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold text-dark mb-3">我的画作</h3>
+                        <div id="paintings-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <!-- 动态显示保存的画作 -->
+                        </div>
+                    </div>
                 </section>
             </div>
 
@@ -366,10 +557,14 @@
                 <!-- 股票预测 -->
                 <section id="predict" class="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h2 class="text-xl font-bold text-dark mb-4">股票价格预测</h2>
-                    <form id="predict-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <form id="predict-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div>
                             <label for="predict-stock-code" class="block text-sm font-medium text-gray-700 mb-1">股票代码</label>
                             <input type="text" id="predict-stock-code" name="predict-stock-code" placeholder="例如: 000001.SZ" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
+                        </div>
+                        <div>
+                            <label for="predict-days" class="block text-sm font-medium text-gray-700 mb-1">预测天数</label>
+                            <input type="number" id="predict-days" name="predict-days" value="5" min="1" max="30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300">
                         </div>
                         <div class="flex items-end">
                             <button type="submit" id="predict-btn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg flex items-center justify-center transition-all duration-300">
@@ -390,12 +585,33 @@
                                     <p id="latest-close-price" class="text-xl font-bold mt-1"></p>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-500">未来五天预测收盘价</p>
-                                    <p id="predicted-price" class="text-xl font-bold mt-1"></p>
+                                    <p class="text-sm text-gray-500">预测类型</p>
+                                    <p id="prediction-type" class="text-xl font-bold mt-1"></p>
                                 </div>
                             </div>
                             <div class="mt-4 text-center">
                                 <p id="prediction-change" class="text-lg font-medium"></p>
+                            </div>
+                            <!-- K线模型预测结果详情 -->
+                            <div id="kline-prediction-details" class="hidden mt-4">
+                                <h4 class="font-semibold mb-2">K线预测详情</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full border border-gray-200 rounded-lg">
+                                        <thead>
+                                            <tr class="bg-gray-50">
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">预测日期</th>
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">开盘价</th>
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">收盘价</th>
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">最高价</th>
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">最低价</th>
+                                                <th class="py-2 px-3 text-left text-sm font-semibold text-gray-700 border-b">成交量</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="kline-prediction-table-body">
+                                            <!-- 动态填充K线预测结果 -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -451,6 +667,47 @@
                         <canvas id="stock-chart" height="300"></canvas>
                     </div>
                 </section>
+
+                <!-- 专业金融数据可视化图表显示区域 -->
+                <section id="financial-charts-section" class="bg-white rounded-xl shadow-md p-6 mb-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-dark">
+                            <i class="fa fa-chart-candlestick mr-2 text-primary"></i>专业金融数据可视化
+                        </h2>
+                        <div id="viz-summary-info" class="text-sm text-gray-600">
+                            <!-- 动态显示汇总信息 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 图表容器 -->
+                    <div id="financial-charts-container" class="space-y-6">
+                        <!-- K线图容器 -->
+                        <div id="kline-chart-container" class="hidden">
+                            <h3 class="text-lg font-semibold mb-3 text-center">K线图与技术指标</h3>
+                            <div id="kline-chart" style="height: 600px;"></div>
+                        </div>
+                        
+                        <!-- 技术指标图表容器 -->
+                        <div id="technical-chart-container" class="hidden">
+                            <h3 class="text-lg font-semibold mb-3 text-center">MACD与RSI技术指标</h3>
+                            <div id="technical-chart" style="height: 400px;"></div>
+                        </div>
+                        
+                        <!-- 成交量图表容器 -->
+                        <div id="volume-chart-container" class="hidden">
+                            <h3 class="text-lg font-semibold mb-3 text-center">成交量分析</h3>
+                            <div id="volume-chart" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 技术分析摘要 -->
+                    <div id="technical-summary" class="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 hidden">
+                        <h4 class="font-semibold mb-3 text-blue-800">技术分析摘要</h4>
+                        <div id="summary-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- 动态填充分析结果 -->
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 
@@ -503,14 +760,39 @@
 
     <!-- JavaScript -->
     <script>
+        // 配置axios默认设置，解决网络连接问题
+        axios.defaults.timeout = 30000;  // 30秒超时
+        axios.defaults.baseURL = window.location.origin;
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        axios.defaults.headers.common['Cache-Control'] = 'no-cache';
+        axios.defaults.headers.common['Pragma'] = 'no-cache';
+        
+        // 添加请求拦截器处理网络错误
+        axios.interceptors.response.use(
+            function(response) {
+                return response;
+            },
+            function(error) {
+                if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                    console.warn('请求超时，正在重试...');
+                }
+                if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+                    console.error('网络连接错误:', error.message);
+                }
+                return Promise.reject(error);
+            }
+        );
         // 移动端菜单切换
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
         });
         
-        // 获取系统状态
-        function refreshSystemStatus() {
+        // 获取系统状态 - 增强版，带重试机制
+        function refreshSystemStatus(retryCount = 0) {
+            const maxRetries = 3;
+            const retryDelay = 1000 * Math.pow(2, retryCount); // 指数退避重试
+            
             axios.get('/api/system_status')
                 .then(response => {
                     if (response.data.success) {
@@ -573,11 +855,52 @@
                         if (status.system_version) {
                             document.getElementById('system-version-info').textContent = status.system_version;
                         }
+                        
+                        console.log('系统状态刷新成功');
+                    } else {
+                        throw new Error('服务器返回错误状态');
                     }
                 })
                 .catch(error => {
-                    console.error('获取系统状态失败:', error);
+                    console.error(`获取系统状态失败 (尝试 ${retryCount + 1}/${maxRetries + 1}):`, error.message);
+                    
+                    // 网络错误重试
+                    if ((error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') && retryCount < maxRetries) {
+                        console.log(`${retryDelay}ms后进行第${retryCount + 2}次重试...`);
+                        setTimeout(() => {
+                            refreshSystemStatus(retryCount + 1);
+                        }, retryDelay);
+                    } else {
+                        // 显示用户友好的错误信息
+                        showSystemStatusError(error);
+                    }
                 });
+        }
+        
+        // 显示系统状态错误
+        function showSystemStatusError(error) {
+            const errorMessage = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <h3 class="text-red-800 font-medium">系统状态获取失败</h3>
+                    <p class="text-red-600 mt-1">错误类型: ${error.code || 'Unknown'}</p>
+                    <p class="text-red-600">请检查:</p>
+                    <ul class="text-red-600 mt-2 ml-4 list-disc">
+                        <li>网络连接是否正常</li>
+                        <li>后端服务是否启动 (python app.py)</li>
+                        <li>端口5000是否被占用</li>
+                        <li>防火墙设置</li>
+                    </ul>
+                    <button onclick="refreshSystemStatus()" class="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors duration-200">
+                        重试
+                    </button>
+                </div>
+            `;
+            
+            // 在页面顶部显示错误信息
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.insertAdjacentHTML('afterbegin', errorMessage);
+            }
         }
         
         // 获取模型列表
@@ -907,11 +1230,14 @@
                 showLoading('train-model-btn');
                 showStatus('train-status', '正在训练模型... 这可能需要一些时间', 'loading');
                 
+                // 获取用户选择的模型类型
+                const modelType = document.getElementById('model-type').value;
+                
                 axios.post('/api/train_model', {
                     stock_code: stockCode,
                     start_date: startDate,
                     end_date: endDate,
-                    model_type: 'baseline',
+                    model_type: modelType,
                     hidden_size: hiddenSize,
                     num_layers: numLayers,
                     sequence_length: sequenceLength,
@@ -955,6 +1281,7 @@
                 e.preventDefault();
                 
                 const stockCode = document.getElementById('predict-stock-code').value;
+                const predictDays = parseInt(document.getElementById('predict-days').value);
                 
                 if (!stockCode) {
                     alert('请输入股票代码');
@@ -963,9 +1290,11 @@
                 
                 showLoading('predict-btn');
                 
+                // 尝试K线模型，如果没有则回退到基线模型
                 axios.post('/api/predict_single', {
                     stock_code: stockCode,
-                    model_type: 'baseline'
+                    model_type: 'kline_lstm',
+                    prediction_days: predictDays
                 })
                 .then(response => {
                     hideLoading('predict-btn');
@@ -976,39 +1305,141 @@
                         // 显示预测结果
                         document.getElementById('prediction-result').classList.remove('hidden');
                         document.getElementById('predicted-stock-code').textContent = data.stock_code;
-                        document.getElementById('latest-close-price').textContent = data.latest_close.toFixed(2);
-                        document.getElementById('predicted-price').textContent = data.predicted_price.toFixed(2);
+                        // 确保latest_close存在
+                        const latestClose = data.latest_close || (data.latest_kline ? data.latest_kline.close : 0);
+                        document.getElementById('latest-close-price').textContent = latestClose.toFixed(2);
+                        document.getElementById('prediction-type').textContent = data.model_type === 'kline_lstm' ? 'K线模型' : '基线模型';
                         
-                        // 设置涨跌颜色
-                        const predictedPriceElement = document.getElementById('predicted-price');
-                        if (data.predicted_price > data.latest_close) {
-                            predictedPriceElement.className = 'text-xl font-bold mt-1 text-success';
-                        } else {
-                            predictedPriceElement.className = 'text-xl font-bold mt-1 text-danger';
+                        // 显示涨跌信息 - 为K线模型计算涨跌幅
+                        let priceChangePercent = data.price_change_percent;
+                        if (data.model_type === 'kline_lstm' && data.predictions && data.predictions.length > 0) {
+                            // 计算K线模型的涨跌幅（基于第一天预测的收盘价）
+                            const firstPredictionClose = data.predictions[0].close;
+                            priceChangePercent = ((firstPredictionClose - latestClose) / latestClose) * 100;
                         }
                         
-                        // 显示涨跌信息
-                        const changeText = data.price_change_percent > 0 
-                            ? `预测上涨: ${Math.abs(data.price_change_percent).toFixed(2)}%` 
-                            : `预测下跌: ${Math.abs(data.price_change_percent).toFixed(2)}%`;
+                        const changeText = priceChangePercent > 0 
+                            ? `预测上涨: ${Math.abs(priceChangePercent).toFixed(2)}%` 
+                            : `预测下跌: ${Math.abs(priceChangePercent).toFixed(2)}%`;
                         
                         document.getElementById('prediction-change').textContent = changeText;
-                        document.getElementById('prediction-change').className = data.price_change_percent > 0 
+                        document.getElementById('prediction-change').className = priceChangePercent > 0 
                             ? 'text-lg font-medium text-success' 
                             : 'text-lg font-medium text-danger';
                         
-                        // 生成预测图表
-                        generatePredictionChart(data.stock_code, data.latest_close, data.predicted_price);
+                        // 处理K线模型的详细预测结果
+                        if (data.model_type === 'kline_lstm' && data.predictions) {
+                            // 显示K线预测详情
+                            const klineDetails = document.getElementById('kline-prediction-details');
+                            klineDetails.classList.remove('hidden');
+                            
+                            // 填充K线预测表格
+                            const tableBody = document.getElementById('kline-prediction-table-body');
+                            let html = '';
+                            
+                            data.kline_predictions.forEach(pred => {
+                                const isBullish = pred.close > pred.open;
+                                const priceClass = isBullish ? 'text-success' : 'text-danger';
+                                
+                                html += `
+                                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                        <td class="py-2 px-3 border-b">${pred.date}</td>
+                                        <td class="py-2 px-3 border-b ${priceClass}">${pred.open.toFixed(2)}</td>
+                                        <td class="py-2 px-3 border-b ${priceClass}">${pred.close.toFixed(2)}</td>
+                                        <td class="py-2 px-3 border-b text-success">${pred.high.toFixed(2)}</td>
+                                        <td class="py-2 px-3 border-b text-danger">${pred.low.toFixed(2)}</td>
+                                        <td class="py-2 px-3 border-b">${pred.volume.toLocaleString()}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            tableBody.innerHTML = html;
+                            
+                            // 生成K线图表
+                            generateKlineChart(data.stock_code);
+                        } else {
+                            // 隐藏K线预测详情（如果是基线模型）
+                            document.getElementById('kline-prediction-details').classList.add('hidden');
+                            
+                            // 生成预测图表（基线模型）
+                            generatePredictionChart(data.stock_code, data.latest_close, data.predicted_price);
+                        }
                         
                         // 平滑滚动到预测结果
                         document.getElementById('prediction-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     } else {
-                        alert('预测失败: ' + response.data.message);
+                        // 如果K线模型失败，尝试使用基线模型
+                                console.warn('K线模型预测失败，尝试使用基线模型');
+                                
+                                axios.post('/api/predict_single', {
+                                    stock_code: stockCode,
+                                    model_type: 'baseline',
+                                    prediction_days: predictDays
+                                })
+                        .then(response => {
+                            if (response.data.success) {
+                                const data = response.data;
+                                
+                                // 显示预测结果
+                                document.getElementById('prediction-result').classList.remove('hidden');
+                                document.getElementById('predicted-stock-code').textContent = data.stock_code;
+                                document.getElementById('latest-close-price').textContent = data.latest_close.toFixed(2);
+                                document.getElementById('prediction-type').textContent = '基线模型';
+                                
+                                // 显示涨跌信息
+                                const changeText = data.price_change_percent > 0 
+                                    ? `预测上涨: ${Math.abs(data.price_change_percent).toFixed(2)}%` 
+                                    : `预测下跌: ${Math.abs(data.price_change_percent).toFixed(2)}%`;
+                                
+                                document.getElementById('prediction-change').textContent = changeText;
+                                document.getElementById('prediction-change').className = data.price_change_percent > 0 
+                                    ? 'text-lg font-medium text-success' 
+                                    : 'text-lg font-medium text-danger';
+                                
+                                // 隐藏K线预测详情
+                                document.getElementById('kline-prediction-details').classList.add('hidden');
+                                
+                                // 生成预测图表
+                                generatePredictionChart(data.stock_code, data.latest_close, data.predicted_price);
+                                
+                                // 平滑滚动到预测结果
+                                document.getElementById('prediction-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else {
+                                alert('预测失败: ' + response.data.message);
+                            }
+                        })
+                        .catch(error => {
+                                    // 增强错误处理
+                                    let errorMsg = '预测过程中发生错误';
+                                    if (error.response) {
+                                        errorMsg = `服务器错误: ${error.response.data.message || '未知服务器错误'}`;
+                                    } else if (error.request) {
+                                        errorMsg = '网络连接错误，请检查您的网络连接和服务器状态';
+                                    } else {
+                                        errorMsg = `请求配置错误: ${error.message}`;
+                                    }
+                                    alert(errorMsg);
+                                    console.error('预测失败:', error);
+                                });
                     }
                 })
                 .catch(error => {
                     hideLoading('predict-btn');
-                    alert('预测过程中发生错误: ' + error.message);
+                    // 增强错误处理，提供更详细的错误信息
+                    let errorMsg = '预测过程中发生错误';
+                    if (error.response) {
+                        // 服务器返回错误响应
+                        errorMsg = `服务器错误: ${error.response.data.message || '未知服务器错误'}`;
+                        console.error('服务器错误:', error.response.data);
+                    } else if (error.request) {
+                        // 请求已发送但没有收到响应
+                        errorMsg = '网络连接错误，请检查您的网络连接和服务器状态';
+                        console.error('网络错误:', error.request);
+                    } else {
+                        // 请求配置出错
+                        errorMsg = `请求配置错误: ${error.message}`;
+                    }
+                    alert(errorMsg);
                     console.error('预测失败:', error);
                 });
             });
@@ -1032,9 +1463,10 @@
                 
                 showLoading('batch-predict-btn');
                 
+                // 尝试使用K线模型进行批量预测
                 axios.post('/api/predict_batch', {
                     stock_codes: stockCodes,
-                    model_type: 'baseline'
+                    model_type: 'kline'
                 })
                 .then(response => {
                     hideLoading('batch-predict-btn');
@@ -1091,7 +1523,7 @@
             });
         });
         
-        // 生成预测结果图表
+        // 生成预测结果图表（基线模型）
         function generatePredictionChart(stockCode, latestClose, predictedPrice) {
             axios.post('/api/generate_chart', {
                 chart_type: 'prediction_result',
@@ -1110,6 +1542,47 @@
             })
             .catch(error => {
                 console.error('生成预测图表失败:', error);
+            });
+        }
+        
+        // 生成K线图表
+        function generateKlineChart(stockCode) {
+            // 先显示预测图表容器
+            const predictionChartContainer = document.getElementById('prediction-chart-container');
+            predictionChartContainer.classList.remove('hidden');
+            predictionChartContainer.querySelector('h3').textContent = 'K线预测走势图';
+            
+            // 获取K线预览图
+            axios.post('/api/generate_chart', {
+                chart_type: 'kline_chart',
+                stock_code: stockCode
+            })
+            .then(response => {
+                if (response.data.success) {
+                    const predictionChart = document.getElementById('prediction-chart');
+                    predictionChart.src = 'data:image/png;base64,' + response.data.image_data;
+                }
+            })
+            .catch(error => {
+                console.error('生成K线图表失败:', error);
+                // 如果生成图表失败，显示K线实时预览
+                tryKlinePreview(stockCode);
+            });
+        }
+        
+        // 尝试获取K线实时预览
+        function tryKlinePreview(stockCode) {
+            axios.post('/api/get_kline_preview', {
+                stock_code: stockCode
+            })
+            .then(response => {
+                if (response.data.success) {
+                    const predictionChart = document.getElementById('prediction-chart');
+                    predictionChart.src = 'data:image/png;base64,' + response.data.image_data;
+                }
+            })
+            .catch(error => {
+                console.error('获取K线预览失败:', error);
             });
         }
         
@@ -1187,6 +1660,252 @@
                 }, 500);
             });
         }
+
+        // 专业金融数据可视化功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航功能
+            setupNavigation();
+            
+            // 金融可视化表单提交
+            document.getElementById('financial-viz-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateFinancialCharts();
+            });
+        });
+
+        // 设置导航功能
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetSection = document.getElementById(targetId);
+                    
+                    if (targetSection) {
+                        // 隐藏所有sections
+                        const sections = document.querySelectorAll('section[id]');
+                        sections.forEach(section => {
+                            if (section.id !== targetId) {
+                                section.classList.add('hidden');
+                            }
+                        });
+                        
+                        // 显示目标section
+                        targetSection.classList.remove('hidden');
+                        
+                        // 滚动到顶部
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        
+                        // 如果切换到绘画section，重新初始化绘画应用
+                        if (targetId === 'painting' && window.paintingApp) {
+                            // 延迟初始化，确保DOM完全可见
+                            setTimeout(() => {
+                                if (document.getElementById('painting-canvas')) {
+                                    window.paintingApp = new PaintingApp();
+                                }
+                            }, 100);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 生成专业金融图表
+        function generateFinancialCharts() {
+            const stockCode = document.getElementById('viz-stock-code').value.trim();
+            const startDate = document.getElementById('viz-start-date').value.trim();
+            const endDate = document.getElementById('viz-end-date').value.trim();
+            
+            // 验证必要参数
+            if (!stockCode) {
+                showStatus('viz-status', '请输入股票代码', 'error');
+                return;
+            }
+            
+            // 获取选择的图表类型
+            const chartTypes = [];
+            if (document.getElementById('chart-kline').checked) chartTypes.push('kline');
+            if (document.getElementById('chart-technical').checked) chartTypes.push('technical');
+            if (document.getElementById('chart-volume').checked) chartTypes.push('volume');
+            
+            if (chartTypes.length === 0) {
+                showStatus('viz-status', '请至少选择一种图表类型', 'error');
+                return;
+            }
+            
+            // 显示加载状态
+            showLoading('generate-viz-btn');
+            showStatus('viz-status', '正在生成专业金融图表，请稍候...', 'loading');
+            
+            // 构建请求数据
+            const requestData = {
+                stock_code: stockCode,
+                chart_types: chartTypes
+            };
+            
+            if (startDate) requestData.start_date = startDate;
+            if (endDate) requestData.end_date = endDate;
+            
+            // 记录开始时间用于性能测试
+            const startTime = performance.now();
+            
+            // 发送请求到后端API
+            axios.post('/api/financial_visualization', requestData)
+                .then(response => {
+                    const endTime = performance.now();
+                    const responseTime = endTime - startTime;
+                    
+                    hideLoading('generate-viz-btn');
+                    
+                    if (response.data.success) {
+                        const charts = response.data.charts;
+                        const summary = response.data.summary;
+                        
+                        // 显示图表区域
+                        showFinancialCharts(charts, summary, stockCode);
+                        
+                        // 显示状态消息
+                        const responseTimeText = responseTime < 500 ? 
+                            `图表生成成功（响应时间: ${responseTime.toFixed(0)}ms，符合性能要求）` : 
+                            `图表生成成功（响应时间: ${responseTime.toFixed(0)}ms，建议优化性能）`;
+                        
+                        showStatus('viz-status', responseTimeText, 'success');
+                        
+                        // 验证性能要求
+                        if (responseTime > 500) {
+                            console.warn(`响应时间超过500ms要求，当前为${responseTime.toFixed(0)}ms`);
+                        }
+                        
+                    } else {
+                        showStatus('viz-status', response.data.message || '生成图表失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    hideLoading('generate-viz-btn');
+                    const errorMessage = error.response?.data?.message || error.message || '网络请求失败';
+                    showStatus('viz-status', `生成图表失败: ${errorMessage}`, 'error');
+                    console.error('生成金融图表失败:', error);
+                });
+        }
+
+        // 显示专业金融图表
+        function showFinancialCharts(charts, summary, stockCode) {
+            // 显示图表区域
+            const chartsSection = document.getElementById('financial-charts-section');
+            chartsSection.classList.remove('hidden');
+            
+            // 平滑滚动到图表区域
+            chartsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // 更新汇总信息
+            if (summary) {
+                const summaryInfo = document.getElementById('viz-summary-info');
+                summaryInfo.innerHTML = `
+                    <span class="mr-4">股票代码: ${stockCode}</span>
+                    <span class="mr-4">当前价格: ¥${summary.current_price?.toFixed(2) || 'N/A'}</span>
+                    <span class="mr-4">价格变化: <span class="${summary.price_change >= 0 ? 'text-success' : 'text-danger'}">${summary.price_change >= 0 ? '+' : ''}${summary.price_change?.toFixed(2) || 'N/A'}</span></span>
+                    <span>最新RSI: ${summary.rsi_current?.toFixed(1) || 'N/A'}</span>
+                `;
+            }
+            
+            // 清空之前的图表
+            ['kline-chart-container', 'technical-chart-container', 'volume-chart-container'].forEach(containerId => {
+                document.getElementById(containerId).classList.add('hidden');
+                document.getElementById(containerId.replace('-container', '')).innerHTML = '';
+            });
+            
+            // 显示K线图
+            if (charts.kline) {
+                const klineContainer = document.getElementById('kline-chart-container');
+                const klineDiv = document.getElementById('kline-chart');
+                klineContainer.classList.remove('hidden');
+                klineDiv.innerHTML = charts.kline.html;
+            }
+            
+            // 显示技术指标图
+            if (charts.technical) {
+                const technicalContainer = document.getElementById('technical-chart-container');
+                const technicalDiv = document.getElementById('technical-chart');
+                technicalContainer.classList.remove('hidden');
+                technicalDiv.innerHTML = charts.technical.html;
+            }
+            
+            // 显示成交量图
+            if (charts.volume) {
+                const volumeContainer = document.getElementById('volume-chart-container');
+                const volumeDiv = document.getElementById('volume-chart');
+                volumeContainer.classList.remove('hidden');
+                volumeDiv.innerHTML = charts.volume.html;
+            }
+            
+            // 显示技术分析摘要
+            if (summary) {
+                const summarySection = document.getElementById('technical-summary');
+                const summaryContent = document.getElementById('summary-content');
+                
+                summaryContent.innerHTML = `
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500 mb-1">当前价格</p>
+                            <p class="text-2xl font-bold text-primary">¥${summary.current_price?.toFixed(2) || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500 mb-1">价格变化</p>
+                            <p class="text-2xl font-bold ${summary.price_change >= 0 ? 'text-success' : 'text-danger'}">${summary.price_change >= 0 ? '+' : ''}${summary.price_change?.toFixed(2) || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500 mb-1">RSI指标</p>
+                            <p class="text-2xl font-bold ${getRSIColor(summary.rsi_current)}">${summary.rsi_current?.toFixed(1) || 'N/A'}</p>
+                            <p class="text-xs text-gray-400 mt-1">${getRSISignal(summary.rsi_current)}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500 mb-1">综合信号</p>
+                            <p class="text-lg font-bold ${getSignalColor(summary.overall_signal)}">${summary.overall_signal || 'N/A'}</p>
+                            <p class="text-xs text-gray-400 mt-1">基于MACD和RSI</p>
+                        </div>
+                    </div>
+                `;
+                
+                summarySection.classList.remove('hidden');
+            }
+        }
+
+        // 获取RSI颜色
+        function getRSIColor(rsi) {
+            if (!rsi) return 'text-gray-500';
+            if (rsi >= 70) return 'text-danger';
+            if (rsi <= 30) return 'text-success';
+            return 'text-warning';
+        }
+
+        // 获取RSI信号
+        function getRSISignal(rsi) {
+            if (!rsi) return 'N/A';
+            if (rsi >= 70) return '超买区域';
+            if (rsi <= 30) return '超卖区域';
+            return '正常区间';
+        }
+
+        // 获取信号颜色
+        function getSignalColor(signal) {
+            if (!signal) return 'text-gray-500';
+            const lowerSignal = signal.toLowerCase();
+            if (lowerSignal.includes('看涨') || lowerSignal.includes('买入')) return 'text-success';
+            if (lowerSignal.includes('看跌') || lowerSignal.includes('卖出')) return 'text-danger';
+            return 'text-warning';
+        }
     </script>
+    
+    <!-- 图像绘画功能脚本 -->
+    <script src="{{ url_for('static', filename='js/painting.js') }}"></script>
 </body>
 </html>
