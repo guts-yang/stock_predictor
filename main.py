@@ -1,4 +1,24 @@
-# 股票预测系统主程序
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+股票预测系统主程序
+
+这是一个基于深度学习的股票价格预测系统，集成了Tushare金融数据平台，
+使用LSTM模型进行智能股票价格预测。系统支持模型训练、单股预测、批量预测、
+数据可视化和Web界面等功能。
+
+主要功能：
+- 模型训练：支持基线LSTM和K线LSTM模型训练
+- 单股预测：预测指定股票的未来价格
+- 批量预测：同时预测多只股票的价格
+- 数据获取：获取并保存股票历史数据
+- 系统帮助：查看系统使用说明
+
+作者：AI助手
+版本：v1.4
+创建时间：2024-11-14
+"""
+
 import os
 import torch
 from stock_data import get_device, save_stock_data
@@ -10,13 +30,28 @@ import pandas as pd
 from config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, DEFAULT_MODEL_TYPE
 
 def clear_screen():
-    """清屏函数"""
+    """清屏函数
+    
+    清空终端屏幕，提供更好的用户体验。
+    支持Windows (cls) 和Unix/Linux/Mac (clear) 系统。
+    """
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def display_menu():
-    """显示主菜单"""
+    """显示主菜单
+    
+    显示系统的主要功能选项，包括：
+    - 模型训练
+    - 单股预测
+    - 批量预测
+    - 数据获取
+    - 系统帮助
+    - 退出系统
+    
+    用户通过输入数字选择对应的功能。
+    """
     print("=" * 50)
-    print("      股票预测系统 v1.0")
+    print("      股票预测系统 v1.4")
     print("=" * 50)
     print("1. 训练股票预测模型")
     print("2. 预测单只股票价格")
@@ -129,8 +164,13 @@ def predict_single_stock_menu():
     print("\n开始预测，请稍候...")
     
     try:
-        # 调用预测函数
-        success = main_predict(stock_code, model_path, model_type)
+        # 调用预测函数，正确传递参数
+        if model_path:
+            # 如果使用自定义路径，将模型路径传递为model_dir参数
+            success = main_predict(stock_code, model_type, model_dir=model_path)
+        else:
+            # 使用默认路径
+            success = main_predict(stock_code, model_type)
         
         if not success:
             print("\n预测失败，请检查股票代码或确保模型已训练")
