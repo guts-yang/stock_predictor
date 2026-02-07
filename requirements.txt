@@ -28,3 +28,11 @@ statsmodels>=0.14.0
 pyyaml>=6.0
 openpyxl>=3.1.0
 python-dotenv>=1.0.0
+
+# PostgreSQL数据库
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.23
+alembic>=1.13.0
+
+# 数据压缩（用于模型权重）
+lz4>=4.3.0

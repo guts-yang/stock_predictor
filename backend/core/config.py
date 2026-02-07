@@ -96,5 +96,31 @@ MAX_RETRY_COUNT = 5  # 最大重试次数
 RETRY_INTERVAL_SECONDS = 2  # 重试间隔秒数
 
 # 系统版本
-SYSTEM_VERSION = '1.0.0'  # 系统版本号
+SYSTEM_VERSION = '2.0.0'  # 系统版本号
 SYSTEM_NAME = 'Stock Predictor System'  # 系统名称
+
+# ==================== 数据库配置 ====================
+# 数据库连接参数
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'stock_predictor')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
+
+# 数据库连接URL
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# SQLAlchemy配置
+SQLALCHEMY_ECHO = False            # 是否打印SQL语句（调试用）
+SQLALCHEMY_POOL_SIZE = 5           # 连接池大小
+SQLALCHEMY_MAX_OVERFLOW = 10       # 连接池最大溢出
+SQLALCHEMY_POOL_RECYCLE = 3600     # 连接回收时间（秒）
+SQLALCHEMY_POOL_PRE_PING = True    # 连接健康检查
+
+# 数据存储策略
+USE_DATABASE = False                # 是否使用数据库存储（默认False，迁移后改为True）
+STORAGE_BACKEND = 'file'           # storage_backend: 'database' or 'file'
+
+# 模型权重压缩
+MODEL_WEIGHTS_COMPRESS = True      # 是否压缩模型权重
+COMPRESSION_ALGORITHM = 'lz4'      # 压缩算法: 'gzip', 'lz4'
