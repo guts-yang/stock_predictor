@@ -6,6 +6,12 @@ import os
 import sys
 from sqlalchemy import text
 
+# 设置UTF-8编码（Windows兼容）
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(__file__))
 
@@ -55,11 +61,12 @@ def migrate_from_csv():
         print("⚠️  未找到CSV文件，跳过迁移")
         return
 
-    with get_db_session() as session:
-        migrated_count = 0
+    migrated_count = 0
 
-        for csv_file in csv_files:
-            try:
+    for csv_file in csv_files:
+        # 为每个文件使用独立的session，避免事务级联失败
+        try:
+            with get_db_session() as session:
                 # 解析文件名获取股票代码
                 # 文件名格式: stock_000001.SZ_20240101_20241201.csv
                 parts = csv_file.stem.split('_')
@@ -81,10 +88,11 @@ def migrate_from_csv():
 
                 print(f"    ✅ 插入 {count} 条记录")
 
-            except Exception as e:
-                print(f"    ❌ 错误: {e}")
+        except Exception as e:
+            print(f"    ❌ 错误: {e}")
+            continue
 
-        print(f"\n✅ 迁移完成，共 {migrated_count} 条记录")
+    print(f"\n✅ 迁移完成，共 {migrated_count} 条记录")
 
 
 def migrate_models():

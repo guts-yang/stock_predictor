@@ -41,43 +41,44 @@ class StockRepository:
         # 获取或创建股票记录
         stock = StockRepository.get_or_create_stock(session, ts_code)
 
-        # 转换DataFrame为列表
-        records = []
-        for _, row in df.iterrows():
-            trade_date = pd.to_datetime(row['trade_date']).date()
-            price = StockPrice(
-                stock_id=stock.id,
-                trade_date=trade_date,
-                open=float(row.get('open', 0)) if pd.notna(row.get('open')) else 0,
-                high=float(row.get('high', 0)) if pd.notna(row.get('high')) else 0,
-                low=float(row.get('low', 0)) if pd.notna(row.get('low')) else 0,
-                close=float(row.get('close', 0)) if pd.notna(row.get('close')) else 0,
-                pre_close=float(row.get('pre_close', 0)) if pd.notna(row.get('pre_close')) else 0,
-                change=float(row.get('change', 0)) if pd.notna(row.get('change')) else 0,
-                pct_chg=float(row.get('pct_chg', 0)) if pd.notna(row.get('pct_chg')) else 0,
-                vol=int(row.get('vol', 0)) if pd.notna(row.get('vol')) else 0,
-                amount=int(row.get('amount', 0)) if pd.notna(row.get('amount')) else 0,
-                ma5=float(row.get('ma5', 0)) if pd.notna(row.get('ma5')) else 0,
-                ma10=float(row.get('ma10', 0)) if pd.notna(row.get('ma10')) else 0,
-                v_ma5=int(row.get('v_ma5', 0)) if pd.notna(row.get('v_ma5')) else 0,
-                v_ma10=int(row.get('v_ma10', 0)) if pd.notna(row.get('v_ma10')) else 0,
-                pct_change=float(row.get('pct_change', 0)) if pd.notna(row.get('pct_change')) else 0,
-                range_val=float(row.get('range', 0)) if pd.notna(row.get('range')) else 0
-            )
-            records.append(price)
+        # 先删除该股票的所有历史数据（避免重复）
+        session.query(StockPrice).filter(StockPrice.stock_id == stock.id).delete()
 
-        # 批量插入（使用merge避免重复）
+        # 去重：按trade_date去重，保留第一条记录
+        print(f"    原始记录数: {len(df)}", end="")
+        df = df.drop_duplicates(subset=['trade_date'], keep='first')
+        print(f", 去重后: {len(df)}")
+
+        # 转换DataFrame为列表并批量插入
         count = 0
-        for price in records:
-            existing = session.query(StockPrice).filter(
-                and_(
-                    StockPrice.stock_id == price.stock_id,
-                    StockPrice.trade_date == price.trade_date
+        for _, row in df.iterrows():
+            try:
+                # 明确指定日期格式为YYYYMMDD
+                trade_date = pd.to_datetime(str(row['trade_date']), format='%Y%m%d').date()
+                price = StockPrice(
+                    stock_id=stock.id,
+                    trade_date=trade_date,
+                    open=float(row.get('open', 0)) if pd.notna(row.get('open')) else 0,
+                    high=float(row.get('high', 0)) if pd.notna(row.get('high')) else 0,
+                    low=float(row.get('low', 0)) if pd.notna(row.get('low')) else 0,
+                    close=float(row.get('close', 0)) if pd.notna(row.get('close')) else 0,
+                    pre_close=float(row.get('pre_close', 0)) if pd.notna(row.get('pre_close')) else 0,
+                    change=float(row.get('change', 0)) if pd.notna(row.get('change')) else 0,
+                    pct_chg=float(row.get('pct_chg', 0)) if pd.notna(row.get('pct_chg')) else 0,
+                    vol=int(row.get('vol', 0)) if pd.notna(row.get('vol')) else 0,
+                    amount=int(row.get('amount', 0)) if pd.notna(row.get('amount')) else 0,
+                    ma5=float(row.get('ma5', 0)) if pd.notna(row.get('ma5')) else 0,
+                    ma10=float(row.get('ma10', 0)) if pd.notna(row.get('ma10')) else 0,
+                    v_ma5=int(row.get('v_ma5', 0)) if pd.notna(row.get('v_ma5')) else 0,
+                    v_ma10=int(row.get('v_ma10', 0)) if pd.notna(row.get('v_ma10')) else 0,
+                    pct_change=float(row.get('pct_change', 0)) if pd.notna(row.get('pct_change')) else 0,
+                    range_val=float(row.get('range', 0)) if pd.notna(row.get('range')) else 0
                 )
-            ).first()
-            if not existing:
                 session.add(price)
                 count += 1
+            except Exception as e:
+                print(f"    ⚠️  跳过异常记录: {row.get('trade_date')} - {e}")
+                continue
 
         session.commit()
         return stock, count
@@ -211,6 +212,10 @@ class ModelRepository:
             is_active=True
         )
 
+        # 添加到session并flush以获取ID
+        session.add(db_model)
+        session.flush()
+
         # 序列化模型权重
         buffer = io.BytesIO()
         torch.save({
@@ -236,7 +241,6 @@ class ModelRepository:
             compression=COMPRESSION_ALGORITHM if MODEL_WEIGHTS_COMPRESS else None
         )
 
-        session.add(db_model)
         session.add(model_weight)
         session.commit()
 

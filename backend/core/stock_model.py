@@ -2,9 +2,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import sys
+import os
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # 导入配置文件
-from config import DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS
+from backend.core.config import DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS
 
 # 简化的基线LSTM模型
 class BaselineLSTMModel(nn.Module):

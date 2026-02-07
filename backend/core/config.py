@@ -118,8 +118,8 @@ SQLALCHEMY_POOL_RECYCLE = 3600     # 连接回收时间（秒）
 SQLALCHEMY_POOL_PRE_PING = True    # 连接健康检查
 
 # 数据存储策略
-USE_DATABASE = False                # 是否使用数据库存储（默认False，迁移后改为True）
-STORAGE_BACKEND = 'file'           # storage_backend: 'database' or 'file'
+USE_DATABASE = True                # 是否使用数据库存储（默认False，迁移后改为True）
+STORAGE_BACKEND = 'database'       # storage_backend: 'database' or 'file'
 
 # 模型权重压缩
 MODEL_WEIGHTS_COMPRESS = True      # 是否压缩模型权重

@@ -25,11 +25,16 @@
 """
 
 import os
+import sys
 import json
 import pandas as pd
 from datetime import datetime, timedelta
 import shutil
-from config import *
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from backend.core.config import *
 
 class CacheManager:
     """数据缓存管理器，负责高效地管理和优化数据缓存策略
