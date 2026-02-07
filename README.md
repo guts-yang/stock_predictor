@@ -206,6 +206,60 @@ docker build -t stock-predictor .
 docker run -p 5000:5000 stock-predictor
 ```
 
+## 🗄️ 数据库配置（可选，v2.0.0新增）
+
+本项目支持PostgreSQL数据库存储股票数据和模型，提供更好的数据管理和查询性能。
+
+### 使用Docker启动PostgreSQL（推荐）
+
+```bash
+# 启动PostgreSQL容器
+docker run -d \
+  --name stock-predictor-db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_DB=stock_predictor \
+  -p 5432:5432 \
+  postgres:16-alpine
+
+# 初始化数据库并迁移现有数据
+python init_db.py
+```
+
+### 使用本地PostgreSQL
+
+1. 安装PostgreSQL: https://www.postgresql.org/download/
+2. 创建数据库:
+   ```sql
+   CREATE DATABASE stock_predictor;
+   ```
+3. 配置.env文件:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=stock_predictor
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+   ```
+4. 初始化数据库:
+   ```bash
+   python init_db.py
+   ```
+
+### 切换存储模式
+
+在`backend/core/config.py`中设置:
+```python
+USE_DATABASE = True   # 使用PostgreSQL（需要先运行 init_db.py）
+USE_DATABASE = False  # 使用本地文件（默认模式）
+```
+
+**注意**:
+- 数据库模式为可选功能，默认使用文件存储
+- 迁移前请确保PostgreSQL服务已启动
+- 迁移过程会保留所有现有数据
+- 可以随时在文件和数据库模式间切换
+
 ## 🔒 安全注意事项
 
 ⚠️ **重要提醒**：
@@ -252,6 +306,15 @@ A: 支持A股市场，包括沪深两市所有股票（股票代码格式：0000
 - 🎯 **生产就绪**: 可直接部署使用
 
 ## 📝 更新日志
+
+### v2.0.0 (2025-02-07)
+- 🗄️ **重大更新**: 集成PostgreSQL数据库支持（可选功能）
+- 📦 **数据迁移**: 提供init_db.py脚本，支持从CSV和模型文件迁移到数据库
+- 🚀 **性能提升**: 利用数据库索引和连接池优化，提升查询性能
+- 🔧 **架构优化**: 引入Repository模式，数据访问层解耦
+- 🔄 **兼容性**: 保持向后兼容，支持文件/数据库双模式切换
+- 📚 **文档更新**: 添加数据库配置和迁移指南
+- ⚙️ **配置增强**: 完善环境变量配置，支持数据库连接参数
 
 ### v1.5.0 (2025-02-07)
 - 🏗️ **重大架构重构**: 前后端分离，模块化设计
