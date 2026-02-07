@@ -1,5 +1,5 @@
-# 股票预测系统Web界面
-from flask import Flask, render_template, request, jsonify, send_file, make_response
+# 导入所需库
+from flask import Flask, render_template, request, jsonify, send_file, make_response, send_from_directory
 import os
 import sys
 import platform
@@ -7,6 +7,8 @@ import subprocess
 import psutil
 import torch
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -34,7 +36,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # 导入项目模块
 from stock_data import fetch_stock_data, save_stock_data, get_latest_stock_data, get_device
 from train_stock_model import train_stock_model
-from predict_stock import main_predict, batch_predict_stocks, load_trained_model, predict_stock_price, get_default_model_path
+from predict_stock import main_predict, batch_predict_stocks, load_trained_model, predict_stock_price, get_default_model_path, plot_kline_prediction
 from config import DEFAULT_START_DATE, DEFAULT_END_DATE, DEFAULT_HIDDEN_SIZE, DEFAULT_NUM_LAYERS, DEFAULT_SEQUENCE_LENGTH, DEFAULT_BATCH_SIZE, DEFAULT_LEARNING_RATE, DEFAULT_EPOCHS, DEFAULT_PATIENCE, MODELS_DIR, RESULTS_DIR, PLOTS_DIR, TUSHARE_TOKEN, MAX_BATCH_PREDICTION, SYSTEM_VERSION
 
 # 创建Flask应用
@@ -201,6 +203,7 @@ def predict_single():
         stock_code = data.get('stock_code')
         model_type = data.get('model_type', 'baseline')
         model_path = data.get('model_path')
+        prediction_days = int(data.get('prediction_days', 5)) if model_type == 'kline_lstm' else None
         
         if not stock_code:
             return jsonify({'success': False, 'message': '请提供股票代码'})
@@ -208,30 +211,49 @@ def predict_single():
         app.logger.info(f'开始预测单只股票: {stock_code}, 模型类型: {model_type}')
         
         # 进行预测
-        success = main_predict(stock_code, model_path, model_type)
+        success, result = main_predict(stock_code, model_path, model_type, prediction_days)
         
         if success:
-            # 获取最新预测结果
-            device = get_device()
-            if model_path is None:
-                model_path = get_default_model_path(stock_code, model_type)
-            
-            model, sequence_length = load_trained_model(model_path)
-            if model is not None:
-                model.to(device)
-                result = predict_stock_price(model, stock_code, device, sequence_length)
+            if model_type == 'kline_lstm':
+                # K线模型预测结果
+                app.logger.info(f'K线预测成功: {stock_code}, 预测未来{prediction_days}天')
                 
-                if result is not None:
-                    predicted_price, latest_close, price_change_percent = result
-                    app.logger.info(f'股票预测成功: {stock_code}, 预测价格: {predicted_price}, 涨跌幅: {price_change_percent:.2f}%')
-                    return jsonify({
-                        'success': True,
-                        'stock_code': stock_code,
-                        'latest_close': latest_close,
-                        'predicted_price': predicted_price,
-                        'price_change_percent': price_change_percent,
-                        'message': '预测成功'
+                # 格式化预测数据以便前端展示
+                formatted_predictions = []
+                for pred in result['predictions']:
+                    formatted_predictions.append({
+                        'open': round(float(pred[0]), 2),
+                        'high': round(float(pred[1]), 2),
+                        'low': round(float(pred[2]), 2),
+                        'close': round(float(pred[3]), 2),
+                        'volume': round(float(pred[4]), 2)
                     })
+                
+                # 返回K线预测结果和图表路径
+                return jsonify({
+                    'success': True,
+                    'stock_code': stock_code,
+                    'model_type': 'kline_lstm',
+                    'predictions': formatted_predictions,
+                    'latest_kline': {
+                        'close': result['metadata']['latest_close']
+                    },
+                    'prediction_days': prediction_days,
+                    'message': f'K线预测成功，预测未来{prediction_days}天'
+                })
+            else:
+                # 基线模型预测结果
+                app.logger.info(f'股票预测成功: {stock_code}, 预测价格: {result['predicted_price']}, 涨跌幅: {result['price_change_percent']:.2f}%')
+                return jsonify({
+                    'success': True,
+                    'stock_code': stock_code,
+                    'model_type': 'baseline',
+                    'latest_close': result['latest_close'],
+                    'predicted_price': result['predicted_price'],
+                    'price_change_percent': result['price_change_percent'],
+                    'chart_path': result['plot_path'],
+                    'message': '预测成功'
+                })
         
         app.logger.warning(f'股票预测失败: {stock_code}')
         return jsonify({'success': False, 'message': '预测失败，请确保模型已训练'})
@@ -270,7 +292,7 @@ def predict_batch():
         device = get_device()
         
         # 进行批量预测
-        results = batch_predict_stocks(model_path, stock_codes, device)
+        results = batch_predict_stocks(model_path, stock_codes, device, model_type)
         
         if results:
             # 保存结果到CSV
@@ -371,10 +393,9 @@ def generate_chart():
         chart_type = data.get('chart_type')
         
         # 创建图表
-        fig, ax = plt.subplots(figsize=(12, 6))
-        
         if chart_type == 'stock_price':
             # 股票价格图表
+            fig, ax = plt.subplots(figsize=(12, 6))
             dates = data.get('dates', [])
             close_prices = data.get('close_prices', [])
             ma5 = data.get('ma5', [])
@@ -400,8 +421,10 @@ def generate_chart():
                 plt.xticks(range(0, len(dates), step), dates[::step], rotation=45)
             else:
                 plt.xticks(rotation=45)
+                
         elif chart_type == 'prediction_result':
             # 预测结果图表
+            fig, ax = plt.subplots(figsize=(12, 6))
             stock_code = data.get('stock_code')
             latest_close = data.get('latest_close')
             predicted_price = data.get('predicted_price')
@@ -431,6 +454,98 @@ def generate_chart():
             
             # 添加网格线
             ax.grid(axis='y', linestyle='--', alpha=0.7)
+            
+        elif chart_type == 'kline_chart':
+            # K线图生成
+            import matplotlib.dates as mdates
+            from datetime import datetime, timedelta
+            
+            stock_code = data.get('stock_code')
+            stock_name = get_stock_name(stock_code)
+            
+            # 获取历史数据
+            history_data = data.get('history_data', {})
+            df = pd.DataFrame(history_data)
+            df['trade_date'] = pd.to_datetime(df['trade_date'])
+            
+            # 获取预测数据
+            predictions = data.get('predictions', [])
+            
+            # 创建图表
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), gridspec_kw={'height_ratios': [3, 1]})
+            fig.suptitle(f'股票{stock_name}({stock_code}) K线预测图', fontsize=16, fontweight='bold')
+            
+            # 绘制历史K线
+            for i, row in df.iterrows():
+                # 判断涨跌
+                if row['close'] >= row['open']:
+                    color = 'red'  # 涨
+                else:
+                    color = 'green'  # 跌
+                
+                # 绘制蜡烛线
+                ax1.plot([row['trade_date'], row['trade_date']], [row['low'], row['high']], color=color, linewidth=1.5)
+                ax1.plot([row['trade_date'], row['trade_date']], [row['open'], row['close']], color=color, linewidth=6)
+            
+            # 绘制移动平均线
+            ax1.plot(df['trade_date'], df['ma5'], color='blue', label='MA5', linewidth=1.2)
+            ax1.plot(df['trade_date'], df['ma10'], color='orange', label='MA10', linewidth=1.2)
+            
+            # 如果有预测数据，绘制预测K线
+            if predictions:
+                # 生成预测日期
+                last_date = df['trade_date'].iloc[-1]
+                pred_dates = [last_date + timedelta(days=i+1) for i in range(len(predictions))]
+                
+                # 绘制预测K线（使用虚线和半透明效果）
+                for i, (pred, date) in enumerate(zip(predictions, pred_dates)):
+                    open_price, high, low, close, volume = pred['open'], pred['high'], pred['low'], pred['close'], pred['volume']
+                    
+                    # 判断涨跌
+                    if close >= open_price:
+                        color = 'red'  # 涨
+                    else:
+                        color = 'green'  # 跌
+                    
+                    # 绘制预测蜡烛线（使用虚线）
+                    ax1.plot([date, date], [low, high], color=color, linewidth=1.5, linestyle='--', alpha=0.8)
+                    ax1.plot([date, date], [open_price, close], color=color, linewidth=6, alpha=0.8)
+            
+            # 设置主图属性
+            ax1.set_ylabel('价格', fontsize=12)
+            ax1.grid(True, alpha=0.3)
+            ax1.legend(loc='upper left')
+            ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+            ax1.tick_params(axis='x', rotation=45)
+            
+            # 绘制成交量
+            # 历史成交量
+            for i, row in df.iterrows():
+                if row['close'] >= row['open']:
+                    color = 'red'
+                else:
+                    color = 'green'
+                ax2.bar(row['trade_date'], row['vol'], color=color, alpha=0.7)
+            
+            # 预测成交量
+            if predictions:
+                for pred, date in zip(predictions, pred_dates):
+                    volume = pred['volume']
+                    if pred['close'] >= pred['open']:  # close >= open
+                        color = 'red'
+                    else:
+                        color = 'green'
+                    ax2.bar(date, volume, color=color, alpha=0.7, linestyle='--', edgecolor='black', linewidth=0.5)
+            
+            # 设置成交量图属性
+            ax2.set_ylabel('成交量', fontsize=12)
+            ax2.set_xlabel('日期', fontsize=12)
+            ax2.grid(True, alpha=0.3)
+            ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+            ax2.tick_params(axis='x', rotation=45)
+            
+            # 调整布局
+            plt.tight_layout(rect=[0, 0, 1, 0.97])
         
         plt.tight_layout()
         
@@ -466,6 +581,88 @@ def download_result():
         return response
     except Exception as e:
         app.logger.error(f'下载文件时出错: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)})
+
+# 获取K线实时预览
+@app.route('/api/get_kline_preview', methods=['POST'])
+def get_kline_preview():
+    try:
+        data = request.json
+        stock_code = data.get('stock_code')
+        days = int(data.get('days', 30))
+        
+        app.logger.info(f'正在生成股票K线预览: {stock_code}, 天数: {days}')
+        
+        # 获取最新股票数据
+        _, _, metadata = get_latest_stock_data(stock_code, days, model_type='kline_lstm')
+        df = metadata['df'].copy()
+        df['trade_date'] = pd.to_datetime(df['trade_date'])
+        
+        # 只取最近days天
+        recent_df = df.tail(days).copy()
+        
+        # 创建图表
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [3, 1]})
+        
+        # 获取股票名称
+        stock_name = get_stock_name(stock_code)
+        fig.suptitle(f'股票{stock_name}({stock_code}) 最近{days}天K线图', fontsize=14, fontweight='bold')
+        
+        # 绘制历史K线
+        for i, row in recent_df.iterrows():
+            # 判断涨跌
+            if row['close'] >= row['open']:
+                color = 'red'  # 涨
+            else:
+                color = 'green'  # 跌
+            
+            # 绘制蜡烛线
+            ax1.plot([row['trade_date'], row['trade_date']], [row['low'], row['high']], color=color, linewidth=1.5)
+            ax1.plot([row['trade_date'], row['trade_date']], [row['open'], row['close']], color=color, linewidth=6)
+        
+        # 绘制移动平均线
+        ax1.plot(recent_df['trade_date'], recent_df['ma5'], color='blue', label='MA5', linewidth=1.2)
+        ax1.plot(recent_df['trade_date'], recent_df['ma10'], color='orange', label='MA10', linewidth=1.2)
+        
+        # 设置主图属性
+        ax1.set_ylabel('价格', fontsize=10)
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(loc='upper left')
+        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
+        ax1.tick_params(axis='x', rotation=45)
+        
+        # 绘制成交量
+        for i, row in recent_df.iterrows():
+            if row['close'] >= row['open']:
+                color = 'red'
+            else:
+                color = 'green'
+            ax2.bar(row['trade_date'], row['vol'], color=color, alpha=0.7)
+        
+        # 设置成交量图属性
+        ax2.set_ylabel('成交量', fontsize=10)
+        ax2.set_xlabel('日期', fontsize=10)
+        ax2.grid(True, alpha=0.3)
+        ax2.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
+        ax2.tick_params(axis='x', rotation=45)
+        
+        # 调整布局
+        plt.tight_layout(rect=[0, 0, 1, 0.97])
+        
+        # 将图表转换为base64编码
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        plt.close()
+        
+        app.logger.info(f'K线预览生成成功: {stock_code}')
+        return jsonify({
+            'success': True,
+            'image_base64': image_base64
+        })
+    except Exception as e:
+        app.logger.error(f'生成K线预览时出错: {str(e)}')
         return jsonify({'success': False, 'message': str(e)})
 
 # 获取系统状态路由
@@ -539,7 +736,12 @@ def system_status():
             'system_version': SYSTEM_VERSION,
             'python_version': python_version,
             'storage_info': storage_info,
-            'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'features': {
+                'kline_prediction': True,
+                'multi_feature_prediction': True,
+                'technical_indicators': True
+            }
         })
     except Exception as e:
         app.logger.error(f'获取系统状态时出错: {str(e)}')
@@ -663,6 +865,12 @@ def startup_preparation():
     app.logger.info(f'使用设备: {device}')
     
     app.logger.info('启动前准备工作完成')
+
+# 添加图表文件访问路由
+@app.route('/plots/<path:filename>')
+def serve_plots(filename):
+    plot_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), PLOTS_DIR)
+    return send_from_directory(plot_dir, filename)
 
 if __name__ == '__main__':
     # 启动前准备

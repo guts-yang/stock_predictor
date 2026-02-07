@@ -1,0 +1,55 @@
+# Python编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# 项目特定文件
+data/*.csv
+data/.cache_metadata.json
+models/*.pth
+models/*.pt
+models/*.h5
+models/*.keras
+plots/*.png
+plots/*.jpg
+plots/*.jpeg
+plots/*.svg
+logs/
+results/
+*.log
+
+# 第三方工具
+.trae/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 备份文件
+*.bak
+*.backup
+
+# 临时文件
+tmp/
+temp/
+*.tmp
